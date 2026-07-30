@@ -1,0 +1,47 @@
+framework_name: framework_1 # framework instance name
+http_ip: 0.0.0.0 # HTTP service listen address
+http_port: 8080 # HTTP service listen port
+
+source_urls: # ability package download url list
+  - ftp://192.168.0.103
+
+log: # logging configuration
+  glog: # glog configuration
+    color_log: true # colored log output
+    also_log_to_stderr: true # also output to stderr and log file
+    max_log_size: 1024 # max single log file size in MB
+    stop_logging_if_full_disk: true # stop writing when disk is full
+    log_dir: log
+
+database: # database configuration
+  redis: # redis configuration
+    host: localhost
+    port: 9090
+
+controller_mgr: # controller module configuration
+  fetch_interval: 10 # scheduled task: fetch_and_check_abilities
+
+resource_mgr: # resource module configuration
+  update_interval: 10 # scheduled task: update
+
+lifecycle_mgr: # lifecycle module configuration
+  clear_stale_heartbeats_interval: 10 # scheduled task: clear_stale_heartbeats
+
+discovery_mgr:               
+  methods:                
+    ipv4: true
+    ipv6: false
+  expiry: 20 # discovery timeout in seconds
+  redis: false # whether to use redis for team info; false = use only config team info (default false)
+  teams:
+    - teamName: team_a # team name (cannot contain spaces)
+      master: true
+      teamID: 3df3a930-b100-5f8e-be60-5884d55e5b70          
+      secret: a8f5f167f44f4964e6c998dee827110c
+  election:
+    method: bully
+    params:
+      weight: 20
+
+opentelemetry:
+  url: http://192.168.188.2:4318/v1/traces

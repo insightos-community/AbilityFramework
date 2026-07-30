@@ -1,0 +1,44 @@
+---
+pageType: home
+
+hero:
+  name: Ability Framework 3.0
+  text: The operating system for robot scenarios
+  tagline: Simple, high-performance, easy to extend
+  actions:
+    - theme: brand
+      text: Get Started
+      link: /en/getting-started/
+    - theme: alt
+      text: Gitlab
+      link: https://git.insightos.cn:40080/kernel/ability-framework/AbilityFramework-cpp
+  # image:
+  #   src: /rspress-icon.png
+  #   alt: Logo
+
+features:
+  - title: High performance
+    details: The core modules are built with a C++ toolchain, delivering an exceptional development experience.
+    icon: 🏃🏻‍♀️
+    link: /en/guide/
+  - title: Rich customization
+    details: Extend robot abilities easily through the plugin and custom theme mechanisms.
+    icon: 🔥
+    link: /en/guide/
+  - title: Skill documentation system
+    details: Ability packages can carry AI-Agent-facing skill documents; the framework hosts them automatically and exposes them via HTTP API to MCP Servers and integrators.
+    icon: 📜
+    link: /en/guide/release-highlights/skill
+  - title: Ability instantiation
+    details: Decouples ability templates from running processes, supporting concurrent instances, frozen spec snapshots, and independent lifecycle management.
+    icon: 🧩
+    link: /en/guide/release-highlights/instance
+  - title: Message bus architecture
+    details: Manager modules collaborate through an in-process message bus and the libuv event loop, unifying synchronous queries and asynchronous tasks.
+    icon: 📡
+    link: /en/guide/concepts/architecture
+  - title: Zenoh remote execution
+    details: Supports launching ability processes remotely across nodes via the Zenoh protocol, combined with networking, team management, and leader election for distributed deployment.
+    icon: 🌐
+    link: /en/guide/release-highlights/zenoh
+---

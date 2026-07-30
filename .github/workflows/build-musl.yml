@@ -1,0 +1,88 @@
+name: Build (musl static)
+
+on:
+  push:
+    tags:
+      - 'v*'
+    branches:
+      - main
+      - master
+  workflow_dispatch:
+    inputs:
+      arch:
+        description: 'Target arch (x86_64 | arm64 | both)'
+        required: false
+        default: 'both'
+
+jobs:
+  build:
+    runs-on: ${{ matrix.runner }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: x86_64
+            platform: linux/amd64
+            runner: ubuntu-24.04
+            artifact: AbilityFramework-linux-x86_64
+          - arch: arm64
+            platform: linux/arm64
+            runner: ubuntu-24.04-arm
+            artifact: AbilityFramework-linux-arm64
+
+    name: build-${{ matrix.arch }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: xmake-io/github-action-setup-xmake@v1
+        with:
+          xmake-version: latest
+
+      - name: Configure Xmake  
+        shell: bash
+        run: |
+          xmake f -cv -y --fwk-static=y
+      
+      - name: Build
+        shell: bash
+        run: |
+          xmake b -r
+
+      - name: Package binary
+        shell: bash
+        run: |
+          BINARY=$(find build -type f -name AbilityFramework | head -1)
+          echo "Found binary at: $BINARY"
+          mkdir -p dist
+          cp "$BINARY" "dist/${{ matrix.artifact }}"
+          cd dist && sha256sum "${{ matrix.artifact }}" > "${{ matrix.artifact }}.sha256"
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact }}
+          path: dist/
+          retention-days: 7
+
+  release:
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          merge-multiple: true
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: artifacts/*
+          generate_release_notes: true
+          draft: false
+          prerelease: ${{ contains(github.ref_name, '-') }}
+      

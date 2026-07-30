@@ -1,0 +1,17 @@
+[
+  {
+    "text": "Getting Started",
+    "link": "/en/getting-started/",
+    "activeMatch": "/en/getting-started/"
+  },
+  {
+    "text": "Guide",
+    "link": "/en/guide/",
+    "activeMatch": "/en/guide/"
+  },
+  {
+    "text": "API",
+    "link": "/en/api/",
+    "activeMatch": "/en/api/"
+  }
+]

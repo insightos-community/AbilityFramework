@@ -1,0 +1,13 @@
+/.cache
+/.vscode
+/bin
+/build
+/unused
+/log
+/packages
+/crs
+/.xmake
+/compile_commands.json
+/ability-config
+/include/version.hpp
+xmake-requires.lock

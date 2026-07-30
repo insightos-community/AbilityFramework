@@ -1,0 +1,60 @@
+---
+pageType: home
+
+hero:
+  name: Ability Framework 3.0
+  text: 重塑机器人场景的操作系统
+  tagline: 简单、高性能、易于扩展
+  actions:
+    - theme: brand
+      text: 快速开始
+      link: /getting-started/
+    - theme: alt
+      text: Gitlab
+      link: https://git.insightos.cn:40080/kernel/ability-framework/AbilityFramework-cpp
+  # image:
+  #   src: /rspress-icon.png
+  #   alt: Logo
+
+features:
+  - title: 极高的性能
+    details: 核心编译模块基于 C++ 工具链完成，带来更加极致的开发体验。
+    icon: 🏃🏻‍♀️
+    link: /guide/
+  # - title: 支持 MDX
+  #   details: MDX 是一种强大的内容编写方式，你可以在 Markdown 中使用 React 组件。
+  #   icon: /mdx.svg
+  #   link: ./guide/use-mdx/components
+  # - title: 内置全文搜索
+  #   details: 构建时自动为你生成全文搜索索引，提供开箱即用的全文搜索能力。
+  #   icon: /search.svg
+  #   link: ./guide/advanced/custom-search
+  # - title: AI 友好
+  #   details: 通过 SSG-MD 生成符合 llms.txt 规范的索引文件和 Markdown 文件，便于大语言模型理解和使用你的技术文档。
+  #   icon: /ai.svg
+  #   link: ./guide/basic/ssg-md
+  # - title: 静态站点生成
+  #   details: 生产环境下，会自动构建为静态 HTML 文件，你可以轻松的部署到任何地方。
+  #   icon: /static.svg
+  #   link: ./guide/basic/ssg
+  - title: 提供多种自定义能力
+    details: 通过插件和自定义主题机制，你可以轻松的扩展机器人能力。
+    icon: 🔥
+    link: /guide/
+  - title: Skill 技能文档系统
+    details: 能力包可携带面向 AI Agent 的技能说明文档，框架自动托管并通过 HTTP API 暴露给 MCP Server 与上层集成方。
+    icon: 📜
+    link: /guide/release-highlights/skill
+  - title: 能力实例化
+    details: 将能力模板与运行进程解耦，支持并发实例、冻结的 spec 快照与独立生命周期管理。
+    icon: 🧩
+    link: /guide/release-highlights/instance
+  - title: 消息总线架构
+    details: 各管理器模块通过进程内消息总线与 libuv 事件循环协作，同步查询与异步任务统一调度。
+    icon: 📡
+    link: /guide/concepts/architecture
+  - title: Zenoh 远程执行
+    details: 支持 Zenoh 协议跨节点远程启动能力进程，配合组网、队伍管理与主从选举实现分布式部署。
+    icon: 🌐
+    link: /guide/release-highlights/zenoh
+---

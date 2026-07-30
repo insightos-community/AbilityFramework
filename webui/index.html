@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AbilityFramework Console</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header>
+  <h1>AbilityFramework Console</h1>
+  <div class="connection">
+    <input id="framework-url" type="text" value="http://localhost:8080" placeholder="framework address">
+    <button onclick="App.connect()">connect</button>
+    <span id="conn-status" class="status-dot offline"></span>
+  </div>
+</header>
+
+<nav>
+  <button class="tab active" onclick="App.showPanel('debug')">framework debug</button>
+  <button class="tab" onclick="App.showPanel('templates')">ability template</button>
+  <button class="tab" onclick="App.showPanel('instances')">ability instance</button>
+  <button class="tab" onclick="App.showPanel('lifecycle')">lifecycleperiod</button>
+  <button class="tab" onclick="App.showPanel('tasks')">businesscall</button>
+  <button class="tab" onclick="App.showPanel('skills')">skill docs</button>
+</nav>
+
+<!-- framework debug -->
+<section id="panel-debug" class="panel active">
+  <div class="card-row">
+    <div class="card">
+      <h3>framework status</h3>
+      <div id="debug-hello" class="mono">-</div>
+    </div>
+    <div class="card">
+      <h3>framework config</h3>
+      <button onclick="Debug.loadConfig()">load config</button>
+      <pre id="debug-config" class="json-box">-</pre>
+    </div>
+  </div>
+  <div class="card-row">
+    <div class="card">
+      <h3>loaded CRDs</h3>
+      <button onclick="Debug.loadCrds()">refresh</button>
+      <div id="debug-crds"></div>
+    </div>
+    <div class="card">
+      <h3>loaded packages</h3>
+      <button onclick="Debug.loadPackages()">refresh</button>
+      <div id="debug-packages"></div>
+      <div style="margin-top:12px;padding-top:12px;border-top:1px solid #2a2d3a">
+        <h3>import ability package</h3>
+        <div class="form-group">
+          <input type="file" id="pkg-upload-file" accept=".zip">
+        </div>
+        <label style="font-size:12px;color:#888"><input type="checkbox" id="pkg-upload-force"> overwrite existing package</label>
+        <button onclick="Debug.uploadPackage()" style="margin-top:8px">upload</button>
+        <pre id="pkg-upload-result" class="json-box" style="margin-top:8px">-</pre>
+      </div>
+    </div>
+  </div>
+  <div class="card-row">
+    <div class="card wide">
+      <h3>CR file list</h3>
+      <button onclick="Debug.loadCrFiles()">refresh</button>
+      <div id="debug-cr-files"></div>
+    </div>
+  </div>
+  <div class="card-row">
+    <div class="card wide">
+      <h3>alert records</h3>
+      <button onclick="Debug.loadAlerts()">refresh</button>
+      <div id="debug-alerts"></div>
+    </div>
+  </div>
+  <div class="card-row">
+    <div class="card wide">
+      <h3>discovery info</h3>
+      <button onclick="Debug.loadDiscovery()">refresh</button>
+      <pre id="debug-discovery" class="json-box">-</pre>
+    </div>
+  </div>
+</section>
+
+<!-- ability template (CR / Prototype) -->
+<section id="panel-templates" class="panel">
+  <div class="card-row">
+    <div class="card wide">
+      <h3>ability template (CR)
+        <button onclick="Templates.refresh()">refresh</button>
+      </h3>
+      <p style="font-size:12px;color:#888;margin:4px 0">A CR is the ability startup template, injected only via package/yaml files. At runtime only instances can be derived from templates; templates cannot be added/deleted here. To clean up a template, delete the yaml and restart the framework.</p>
+      <table id="template-table">
+        <thead>
+          <tr><th>template name</th><th>ability class</th><th>version</th><th>autoStart</th><th>singleton</th><th>keepAlive</th><th>operation</th></tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+  <div class="card-row">
+    <div class="card wide">
+      <h3>device CR</h3>
+      <button onclick="Templates.refreshDevices()">refresh</button>
+      <table id="device-table">
+        <thead>
+          <tr><th>instance name</th><th>device class</th><th>version</th><th>ID</th></tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+  <div class="card-row">
+    <div class="card wide">
+      <h3>service CR</h3>
+      <button onclick="Templates.refreshServices()">refresh</button>
+      <table id="service-table">
+        <thead>
+          <tr><th>instance name</th><th>service name</th><th>version</th><th>status</th><th>restart count</th><th>ID</th></tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+  <div id="template-detail" class="card wide" style="display:none">
+    <h3>template detail <button onclick="this.parentElement.parentElement.style.display='none'">close</button></h3>
+    <pre id="template-detail-json" class="json-box"></pre>
+  </div>
+</section>
+
+<!-- ability instance (Runtime Instance) -->
+<section id="panel-instances" class="panel">
+  <div class="card-row">
+    <div class="card wide">
+      <h3>ability instance
+        <button onclick="Instances.refresh()">refresh</button>
+        <label><input type="checkbox" id="auto-refresh-instances" onchange="Instances.toggleAutoRefresh()"> auto-refresh</label>
+      </h3>
+      <p style="font-size:12px;color:#888;margin:4px 0">Runtime objects derived from templates. Each startup gets a new instance_id, destroyed immediately on exit.</p>
+      <table id="instance-table">
+        <thead>
+          <tr><th>instance name</th><th>ability class</th><th>belongs totemplate</th><th>status</th><th>start time</th><th>instance_id</th><th>operation</th></tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+  <div id="instance-detail" class="card wide" style="display:none">
+    <h3>instance detail <button onclick="this.parentElement.parentElement.style.display='none'">close</button></h3>
+    <pre id="instance-detail-json" class="json-box"></pre>
+  </div>
+</section>
+
+<!-- lifecycle period -->
+<section id="panel-lifecycle" class="panel">
+  <div class="card-row">
+    <div class="card wide">
+      <h3>heartbeat monitor
+        <button onclick="Lifecycle.refreshHeartbeats()">refresh</button>
+        <label><input type="checkbox" id="auto-refresh-hb" onchange="Lifecycle.toggleAutoRefresh()"> auto-refresh</label>
+      </h3>
+      <table id="heartbeat-table">
+        <thead>
+          <tr><th>instance name</th><th>ability class</th><th>status</th><th>IPCport</th><th>service port</th><th>ID</th></tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+  <div class="card-row">
+    <div class="card">
+      <h3>lifecycleperiodoperation</h3>
+      <div class="form-group">
+        <label>instance ID</label>
+        <select id="lc-instance-id"></select>
+      </div>
+      <div class="form-group">
+        <label>command</label>
+        <select id="lc-command">
+          <option value="start">start</option>
+          <option value="connect">connect</option>
+          <option value="disconnect">disconnect</option>
+          <option value="terminate">terminate</option>
+        </select>
+      </div>
+      <button onclick="Lifecycle.sendCommand()">send</button>
+      <pre id="lc-result" class="json-box">-</pre>
+    </div>
+  </div>
+</section>
+
+<!-- businesscall -->
+<section id="panel-tasks" class="panel">
+  <div class="card-row">
+    <div class="card">
+      <h3>selectability</h3>
+      <div class="form-group">
+        <label>runinability</label>
+        <select id="task-ability-select" onchange="Tasks.onAbilitySelected()">
+          <option value="">-- please select --</option>
+        </select>
+      </div>
+      <div id="task-registry"></div>
+    </div>
+    <div class="card">
+      <h3>call Task</h3>
+      <div class="form-group">
+        <label>Task</label>
+        <select id="task-type-select" onchange="Tasks.onTaskTypeChanged()">
+          <option value="">-- select firstability --</option>
+        </select>
+      </div>
+      <div id="task-params-hint" style="font-size:11px;color:#888;margin:4px 0 8px 0"></div>
+      <div class="form-group">
+        <label>Input JSON
+          <button class="btn-sm" onclick="Tasks.resetTaskInputSkeleton()">reset example</button>
+        </label>
+        <textarea id="task-input" rows="10">{}</textarea>
+      </div>
+      <button onclick="Tasks.startTask()">execute</button>
+      <pre id="task-start-result" class="json-box">-</pre>
+    </div>
+  </div>
+  <div class="card-row">
+    <div class="card">
+      <h3>query Task status</h3>
+      <div class="form-group">
+        <label>Task ID</label>
+        <input id="task-query-id" type="text" placeholder="task-xxxxxxxx">
+      </div>
+      <button onclick="Tasks.queryTaskStatus()">query</button>
+      <pre id="task-status-result" class="json-box">-</pre>
+    </div>
+    <div class="card">
+      <h3>task list
+        <button onclick="Tasks.listTasks()">refresh</button>
+      </h3>
+      <table id="task-list-table">
+        <thead>
+          <tr><th>Task ID</th><th>type</th><th>status</th><th>creation time</th><th>operation</th></tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- skill docs -->
+<section id="panel-skills" class="panel">
+  <div class="card-row">
+    <div class="card wide">
+      <h3>ability package embedded skill docs
+        <button onclick="Skills.refresh()">refresh</button>
+      </h3>
+      <p style="font-size:12px;color:#888;margin:4px 0">Each ability package can include <code>skills/*.md</code> in the zip. The framework mirrors them to <code>&lt;home&gt;/skills/_packages/&lt;pkg&gt;/&lt;ver&gt;/</code> on install, for agents / MCP servers to fetch via <code>GET /api/skill</code>.</p>
+      <table id="skill-table">
+        <thead>
+          <tr><th>Package</th><th>Version</th><th>File</th><th>Title</th><th>Size</th><th>Action</th></tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+  <div id="skill-detail" class="card wide" style="display:none">
+    <h3>skill content <button onclick="this.parentElement.parentElement.style.display='none'">close</button></h3>
+    <pre id="skill-detail-body" class="json-box" style="white-space:pre-wrap"></pre>
+  </div>
+</section>
+
+<script src="app.js"></script>
+</body>
+</html>

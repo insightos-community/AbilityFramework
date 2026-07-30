@@ -1,0 +1,37 @@
+[
+  {
+    "type": "dir-section-header",
+    "name": "release-highlights",
+    "label": "Release Highlights"
+  },
+  {
+    "type": "dir-section-header",
+    "name": "concepts",
+    "label": "Core Concepts"
+  },
+  {
+    "type": "dir-section-header",
+    "name": "configuration",
+    "label": "Configuration"
+  },
+  {
+    "type": "dir-section-header",
+    "name": "deployment",
+    "label": "Deployment"
+  },
+  {
+    "type": "dir-section-header",
+    "name": "examples",
+    "label": "Examples"
+  },
+  {
+    "type": "dir-section-header",
+    "name": "troubleshooting",
+    "label": "Troubleshooting"
+  },
+  {
+    "type": "dir-section-header",
+    "name": "release-notes",
+    "label": "Release Notes"
+  }
+]
