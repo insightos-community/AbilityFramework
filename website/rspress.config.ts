@@ -24,10 +24,9 @@ export default defineConfig({
   themeConfig: {
     socialLinks: [
       {
-        icon: 'gitlab',
+        icon: 'github',
         mode: 'link',
-        content:
-          'https://git.insightos.cn:40080/kernel/ability-framework/AbilityFramework-cpp',
+        content: 'https://github.com/insightos-community/AbilityFramework',
       },
     ],
     llmsUI: {

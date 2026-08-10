@@ -257,7 +257,7 @@ log:
       max_files: 3
 ```
 
-For the full field reference, see [Configuration file reference - the log node](/en/guide/configuration/config-file#log-logging-configuration).
+For the full field reference, see [Configuration file reference - the log node](/en/guide/configuration/config-file#log--logging-configuration).
 
 ---
 

@@ -4,9 +4,6 @@ on:
   push:
     tags:
       - 'v*'
-    branches:
-      - main
-      - master
   workflow_dispatch:
     inputs:
       arch:
@@ -34,10 +31,23 @@ jobs:
     name: build-${{ matrix.arch }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # git describe 兜底需要完整 tag 历史
 
       - uses: xmake-io/github-action-setup-xmake@v1
         with:
           xmake-version: latest
+
+      - name: Resolve build metadata (date / tag / version)
+        shell: bash
+        run: |
+          echo "AFWK_GIT_COMMIT_HASH=${GITHUB_SHA::7}" >> "$GITHUB_ENV"
+          echo "AFWK_BUILD_DATE=$(date +%Y-%m-%d)" >> "$GITHUB_ENV"
+          if [[ "$GITHUB_REF_TYPE" == "tag" ]]; then
+            echo "AFWK_VERSION_STRING=${GITHUB_REF_NAME}" >> "$GITHUB_ENV"
+          else
+            echo "AFWK_VERSION_STRING=v0.0.0-dev" >> "$GITHUB_ENV"
+          fi
 
       - name: Configure Xmake  
         shell: bash

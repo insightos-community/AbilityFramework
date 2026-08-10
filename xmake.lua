@@ -9,9 +9,9 @@ add_cxxflags("gcc::-fcoroutines","gcc::-pthread","gcc::-Werror=return-type")
 add_requires("glog v0.7.1","yaml-cpp 0.8.0")
 add_requires("nlohmann_json v3.12.0")
 
--- json-schema-validator is a dependency, so the version can be pinned
--- the json-schema-validator install process reads this environment variable
--- if the installed version is incorrect, run the command manually, then xmake config
+-- 其为json-schema-validator的依赖, 这样可以固定版本
+-- json-schema-validator 的安装过程会读取此环境变量
+-- 如果安装版本不对, 请手动执行命令, 再 xmake config
 -- export "NLOHMANN_JSON_VERSION", "3.12.0"
 add_requireconfs("json-schema-validator.nlohmann_json", {version = "v3.12.0", override=true})
 
@@ -30,18 +30,18 @@ add_requireconfs("sqlitecpp.sqlite3", {override=true})
 
 add_includedirs("include")
 
--- if set, statically link the framework and all libraries
+-- 如果是,则在链接框架时以全静态方式链接所有库
 option("fwk-static")
     set_default(false)
     add_ldflags("-static")
     set_showmenu(true)
-    set_description("statically link all libraries, used for cross-compilation")
+    set_description("以静态方式链接所有库,用于交叉编译")
 option_end()
 
 option("use-cpptrace")
     set_default(false)
     set_showmenu(true)
-    set_description("use cpptrace, for framework debugging")
+    set_description("使用cpptrace, 用于框架debug")
 option_end()
 
 if has_config("use-cpptrace") then
@@ -51,7 +51,7 @@ end
 option("enable-test")
     set_default(false)
     set_showmenu(true)
-    set_description("use cpptrace, for framework debugging")
+    set_description("使用cpptrace, 用于框架debug")
 option_end()
 
 -- Tests use a vendored doctest.h in test/ (no external package required)
@@ -82,8 +82,25 @@ target("AbilityFrameworkAux")
             config[varname] = string.trim(out)
             cprintf("${blue}  -- %s is %s\n", varname, config[varname])
         end
-        set_var_from_cmd("@BUILD_DATE@", "date +%Y-%m-%d")
-        set_var_from_cmd("@GIT_COMMIT_HASH@", "git -C " .. projectdir .. " rev-parse --short HEAD")
+        -- CI (build-musl) 通过 AFWK_* 环境变量注入日期/commit/版本号，优先使用；
+        -- 本地开发未设置时回退到 git 命令，行为与原先一致。
+        local function set_var(varname, envname, fallback_cmd)
+            local v = os.getenv(envname)
+            if v and v ~= "" then
+                config[varname] = string.trim(v)
+                cprintf("${blue}  -- %s is %s (from env %s)\n", varname, config[varname], envname)
+            else
+                set_var_from_cmd(varname, fallback_cmd)
+            end
+        end
+        set_var("@BUILD_DATE@",      "AFWK_BUILD_DATE",      "date +%Y-%m-%d")
+        set_var("@GIT_COMMIT_HASH@", "AFWK_GIT_COMMIT_HASH", "git -C " .. projectdir .. " rev-parse --short HEAD")
+        -- VERSION_STRING 优先取 CI 注入的 tag（保留原始 'v' 前缀，如 v1.2.3），
+        -- 否则取最近 git tag；无 tag 时退化 v0.0.0-dev。
+        -- pipefail 保证 describe 失败也能走到 '|| echo' 兜底。
+        set_var("@VERSION_STRING@", "AFWK_VERSION_STRING",
+            "bash -c \"set -o pipefail; git -C " .. projectdir
+            .. " describe --tags --abbrev=0 2>/dev/null || echo v0.0.0-dev\"")
 
         local input_path = path.join(projectdir, "include/util/version.hpp.in")
         local output_path = path.join(projectdir, "include/version.hpp")
@@ -106,7 +123,7 @@ target("AbilityFrameworkAux")
             cprint("${green}write to include/version.hpp complete")
         end
 
-        -- generate embedded WebUI (always runs; embed.py itself decides via mtime whether to rewrite)
+        -- 生成嵌入式 WebUI (始终运行，由 embed.py 自身根据 mtime 决定是否重写)
         local embed_script = path.join(projectdir, "webui/embed.py")
         if os.exists(embed_script) then
             cprint("${green}embed webui")
@@ -131,8 +148,19 @@ task("make-version")
             config[varname] = string.trim(out)
             cprintf("${blue}  -- %s is %s\n", varname, config[varname])
         end
-        set_var_from_cmd("@BUILD_DATE@","date +%Y-%m-%d")
-        set_var_from_cmd("@GIT_COMMIT_HASH@","git rev-parse --short HEAD")
+        local function set_var(varname, envname, fallback_cmd)
+            local v = os.getenv(envname)
+            if v and v ~= "" then
+                config[varname] = string.trim(v)
+                cprintf("${blue}  -- %s is %s (from env %s)\n", varname, config[varname], envname)
+            else
+                set_var_from_cmd(varname, fallback_cmd)
+            end
+        end
+        set_var("@BUILD_DATE@",      "AFWK_BUILD_DATE",      "date +%Y-%m-%d")
+        set_var("@GIT_COMMIT_HASH@", "AFWK_GIT_COMMIT_HASH", "git rev-parse --short HEAD")
+        set_var("@VERSION_STRING@",  "AFWK_VERSION_STRING",
+            "bash -c \"set -o pipefail; git describe --tags --abbrev=0 2>/dev/null || echo v0.0.0-dev\"")
 
         local input_config = io.readfile("include/util/version.hpp.in")
         local output_config = input_config
@@ -151,11 +179,11 @@ task("make-version")
         cprint("${green}write to include/version.hpp complete")
     end)
     set_menu {
-                -- settingmenu usage
+                -- 设置菜单用法
                 usage = "xmake make-version [options]"
-                -- set the menu description
+                -- 设置菜单描述
             ,   description = "generate include/version.hpp"
 
-                -- set menu option; if no option, setting is {}
+                -- 设置菜单选项，如果没有选项，可以设置为{}
             ,   options = { }
             }
