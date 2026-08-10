@@ -8,6 +8,7 @@ export default defineConfig({
   lang: 'en',
   title: 'AbilityFramework',
   icon: '/logo.svg',
+  base: '/AbilityFramework/',
   llms: true,
   locales: [
     {
