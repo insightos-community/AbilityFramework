@@ -1,0 +1,54 @@
+framework_name: framework_1   # 框架名
+http_ip: 0.0.0.0              # 框架HTTP服务IP
+http_port: 8080               # 框架HTTP服务端口
+
+source_urls:                  # 能力包下载地址列表
+  - ftp://127.0.0.1
+
+log:                            # 日志配置
+  glog:                         # glog配置
+    color_log: true             # 彩色日志
+    also_log_to_stderr: true    # 同时输出到stderr和日志文件
+    max_log_size: 1024          # 日志文件最大大小，单位 MB
+    stop_logging_if_full_disk: true # 磁盘满时停止写入
+    log_dir: log
+
+database:                     # 数据库配置
+  redis:                      # redis配置
+    host: localhost
+    port: 9090
+
+controller_mgr:               # controller模块配置
+  fetch_interval: 10          # 定时任务 fetch_and_check_abilities
+
+resource_mgr:
+  update_interval: 10         # 定时任务 update
+
+lifecycle_mgr:                # lifecycle模块配置
+  clear_stale_heartbeats_interval: 10  # 定时任务 clear_stale_heartbeats
+
+discovery_mgr:               
+  methods:                
+    ipv4: true
+    ipv6: false
+  udp:                        # UDP 广播监听配置
+    ipv4:
+      host: 0.0.0.0           # IPv4 UDP 监听地址
+      port: 12345             # IPv4 UDP 监听端口
+    ipv6:
+      host: "::"              # IPv6 UDP 监听地址
+      port: 12346             # IPv6 UDP 监听端口
+  expiry: 20       # 超时时间，单位秒
+  redis: false     # 是否使用redis存储队伍信息，false时只使用配置中的队伍信息，缺省值false
+  teams:
+    - teamName: team_a  #名称中不能存在空格
+      master: true
+      teamID: 3df3a930-b100-5f8e-be60-5884d55e5b70          
+      secret: development-only-change-before-use
+  election:
+    method: bully
+    params:
+      weight: 20
+
+opentelemetry:
+  url: http://127.0.0.1:4318/v1/traces

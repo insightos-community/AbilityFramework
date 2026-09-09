@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<!--
+Copyright 2026 InsightOS
+SPDX-License-Identifier: Apache-2.0
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    https://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+-->
+
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AbilityFramework Console</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header>
+  <h1>AbilityFramework Console</h1>
+  <div class="connection">
+    <input id="framework-url" type="text" value="http://localhost:8080" placeholder="框架地址">
+    <button onclick="App.connect()">连接</button>
+    <span id="conn-status" class="status-dot offline"></span>
+  </div>
+</header>
+
+<nav>
+  <button class="tab active" onclick="App.showPanel('debug')">框架调试</button>
+  <button class="tab" onclick="App.showPanel('templates')">能力模板</button>
+  <button class="tab" onclick="App.showPanel('instances')">能力实例</button>
+  <button class="tab" onclick="App.showPanel('lifecycle')">生命周期</button>
+  <button class="tab" onclick="App.showPanel('tasks')">业务调用</button>
+  <button class="tab" onclick="App.showPanel('skills')">技能文档</button>
+</nav>
+
+<!-- 框架调试 -->
+<section id="panel-debug" class="panel active">
+  <div class="card-row">
+    <div class="card">
+      <h3>框架状态</h3>
+      <div id="debug-hello" class="mono">-</div>
+    </div>
+    <div class="card">
+      <h3>框架配置</h3>
+      <button onclick="Debug.loadConfig()">加载配置</button>
+      <pre id="debug-config" class="json-box">-</pre>
+    </div>
+  </div>
+  <div class="card-row">
+    <div class="card">
+      <h3>已加载 CRD</h3>
+      <button onclick="Debug.loadCrds()">刷新</button>
+      <div id="debug-crds"></div>
+    </div>
+    <div class="card">
+      <h3>已加载包</h3>
+      <button onclick="Debug.loadPackages()">刷新</button>
+      <div id="debug-packages"></div>
+      <div style="margin-top:12px;padding-top:12px;border-top:1px solid #2a2d3a">
+        <h3>导入能力包</h3>
+        <div class="form-group">
+          <input type="file" id="pkg-upload-file" accept=".zip">
+        </div>
+        <label style="font-size:12px;color:#888"><input type="checkbox" id="pkg-upload-force"> 覆盖已有包</label>
+        <button onclick="Debug.uploadPackage()" style="margin-top:8px">上传</button>
+        <pre id="pkg-upload-result" class="json-box" style="margin-top:8px">-</pre>
+      </div>
+    </div>
+  </div>
+  <div class="card-row">
+    <div class="card wide">
+      <h3>CR 文件列表</h3>
+      <button onclick="Debug.loadCrFiles()">刷新</button>
+      <div id="debug-cr-files"></div>
+    </div>
+  </div>
+  <div class="card-row">
+    <div class="card wide">
+      <h3>告警记录</h3>
+      <button onclick="Debug.loadAlerts()">刷新</button>
+      <div id="debug-alerts"></div>
+    </div>
+  </div>
+  <div class="card-row">
+    <div class="card wide">
+      <h3>组网信息</h3>
+      <button onclick="Debug.loadDiscovery()">刷新</button>
+      <pre id="debug-discovery" class="json-box">-</pre>
+    </div>
+  </div>
+</section>
+
+<!-- 能力模板 (CR / Prototype) -->
+<section id="panel-templates" class="panel">
+  <div class="card-row">
+    <div class="card wide">
+      <h3>能力模板 (CR)
+        <button onclick="Templates.refresh()">刷新</button>
+      </h3>
+      <p style="font-size:12px;color:#888;margin:4px 0">CR 是能力的启动模板，仅由能力包/yaml 文件注入。运行时只能基于模板派生实例，无法在此处增删 CR；要清理模板请删除 yaml 后重启框架。</p>
+      <table id="template-table">
+        <thead>
+          <tr><th>模板名</th><th>能力类</th><th>版本</th><th>autoStart</th><th>singleton</th><th>keepAlive</th><th>操作</th></tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+  <div class="card-row">
+    <div class="card wide">
+      <h3>设备 CR</h3>
+      <button onclick="Templates.refreshDevices()">刷新</button>
+      <table id="device-table">
+        <thead>
+          <tr><th>实例名</th><th>设备类</th><th>版本</th><th>ID</th></tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+  <div class="card-row">
+    <div class="card wide">
+      <h3>服务 CR</h3>
+      <button onclick="Templates.refreshServices()">刷新</button>
+      <table id="service-table">
+        <thead>
+          <tr><th>实例名</th><th>服务名</th><th>版本</th><th>状态</th><th>重启次数</th><th>ID</th></tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+  <div id="template-detail" class="card wide" style="display:none">
+    <h3>模板详情 <button onclick="this.parentElement.parentElement.style.display='none'">关闭</button></h3>
+    <pre id="template-detail-json" class="json-box"></pre>
+  </div>
+</section>
+
+<!-- 能力实例 (Runtime Instance) -->
+<section id="panel-instances" class="panel">
+  <div class="card-row">
+    <div class="card wide">
+      <h3>能力实例
+        <button onclick="Instances.refresh()">刷新</button>
+        <label><input type="checkbox" id="auto-refresh-instances" onchange="Instances.toggleAutoRefresh()"> 自动刷新</label>
+      </h3>
+      <p style="font-size:12px;color:#888;margin:4px 0">从模板派生的运行时对象。每次启动获得新的 instance_id，退出后立即销毁。</p>
+      <table id="instance-table">
+        <thead>
+          <tr><th>实例名</th><th>能力类</th><th>所属模板</th><th>状态</th><th>启动时间</th><th>instance_id</th><th>操作</th></tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+  <div id="instance-detail" class="card wide" style="display:none">
+    <h3>实例详情 <button onclick="this.parentElement.parentElement.style.display='none'">关闭</button></h3>
+    <pre id="instance-detail-json" class="json-box"></pre>
+  </div>
+</section>
+
+<!-- 生命周期 -->
+<section id="panel-lifecycle" class="panel">
+  <div class="card-row">
+    <div class="card wide">
+      <h3>心跳监控
+        <button onclick="Lifecycle.refreshHeartbeats()">刷新</button>
+        <label><input type="checkbox" id="auto-refresh-hb" onchange="Lifecycle.toggleAutoRefresh()"> 自动刷新</label>
+      </h3>
+      <table id="heartbeat-table">
+        <thead>
+          <tr><th>实例名</th><th>能力类</th><th>状态</th><th>IPC端口</th><th>服务端口</th><th>ID</th></tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+  <div class="card-row">
+    <div class="card">
+      <h3>生命周期操作</h3>
+      <div class="form-group">
+        <label>实例 ID</label>
+        <select id="lc-instance-id"></select>
+      </div>
+      <div class="form-group">
+        <label>命令</label>
+        <select id="lc-command">
+          <option value="start">start</option>
+          <option value="connect">connect</option>
+          <option value="disconnect">disconnect</option>
+          <option value="terminate">terminate</option>
+        </select>
+      </div>
+      <button onclick="Lifecycle.sendCommand()">发送</button>
+      <pre id="lc-result" class="json-box">-</pre>
+    </div>
+  </div>
+</section>
+
+<!-- 业务调用 -->
+<section id="panel-tasks" class="panel">
+  <div class="card-row">
+    <div class="card">
+      <h3>选择能力</h3>
+      <div class="form-group">
+        <label>运行中的能力</label>
+        <select id="task-ability-select" onchange="Tasks.onAbilitySelected()">
+          <option value="">-- 请选择 --</option>
+        </select>
+      </div>
+      <div id="task-registry"></div>
+    </div>
+    <div class="card">
+      <h3>调用 Task</h3>
+      <div class="form-group">
+        <label>Task</label>
+        <select id="task-type-select" onchange="Tasks.onTaskTypeChanged()">
+          <option value="">-- 先选择能力 --</option>
+        </select>
+      </div>
+      <div id="task-params-hint" style="font-size:11px;color:#888;margin:4px 0 8px 0"></div>
+      <div class="form-group">
+        <label>Input JSON
+          <button class="btn-sm" onclick="Tasks.resetTaskInputSkeleton()">重置示例</button>
+        </label>
+        <textarea id="task-input" rows="10">{}</textarea>
+      </div>
+      <button onclick="Tasks.startTask()">执行</button>
+      <pre id="task-start-result" class="json-box">-</pre>
+    </div>
+  </div>
+  <div class="card-row">
+    <div class="card">
+      <h3>查询 Task 状态</h3>
+      <div class="form-group">
+        <label>Task ID</label>
+        <input id="task-query-id" type="text" placeholder="task-xxxxxxxx">
+      </div>
+      <button onclick="Tasks.queryTaskStatus()">查询</button>
+      <pre id="task-status-result" class="json-box">-</pre>
+    </div>
+    <div class="card">
+      <h3>任务列表
+        <button onclick="Tasks.listTasks()">刷新</button>
+      </h3>
+      <table id="task-list-table">
+        <thead>
+          <tr><th>Task ID</th><th>类型</th><th>状态</th><th>创建时间</th><th>操作</th></tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- 技能文档 -->
+<section id="panel-skills" class="panel">
+  <div class="card-row">
+    <div class="card wide">
+      <h3>能力包内嵌技能文档
+        <button onclick="Skills.refresh()">刷新</button>
+      </h3>
+      <p style="font-size:12px;color:#888;margin:4px 0">每个能力包可以在 zip 里包含 <code>skills/*.md</code>。框架在 install 时镜像到 <code>&lt;home&gt;/skills/_packages/&lt;pkg&gt;/&lt;ver&gt;/</code>，agent / MCP server 通过 <code>GET /api/skill</code> 拉取。</p>
+      <table id="skill-table">
+        <thead>
+          <tr><th>包</th><th>版本</th><th>文件</th><th>标题</th><th>大小</th><th>操作</th></tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+  <div id="skill-detail" class="card wide" style="display:none">
+    <h3>技能内容 <button onclick="this.parentElement.parentElement.style.display='none'">关闭</button></h3>
+    <pre id="skill-detail-body" class="json-box" style="white-space:pre-wrap"></pre>
+  </div>
+</section>
+
+<script src="app.js"></script>
+</body>
+</html>
