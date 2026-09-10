@@ -52,6 +52,8 @@ Ability 代码、Python SDK 依赖与包独立于该可执行文件。宿主静�
 
 [详细配置与 API 参考](README.reference.md)
 
+[CI 与 Tag 制品发布](docs/ci-release.md)
+
 ## 许可证
 
 Copyright 2026 InsightOS。自有代码采用 [Apache-2.0](LICENSE)；第三方组件与资产请查看 [NOTICE](NOTICE) 和[许可范围](LICENSE_SCOPE.md)。
