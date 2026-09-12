@@ -13,9 +13,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#pragma once
+
+#include <atomic>
+#include <thread>
+#include <type_traits>
+#include <utility>
 #include <version>
 
-#if __cpp_lib_jthread >= 201911L
+#if defined(__cpp_lib_jthread) && __cpp_lib_jthread >= 201911L
 // 标准库里已经有了,直接用
 #include <thread>
 using std::jthread;
