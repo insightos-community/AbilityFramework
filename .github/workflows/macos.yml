@@ -37,4 +37,5 @@ jobs:
         with:
           name: AbilityFramework-macos-arm64-development
           path: .output/*
+          include-hidden-files: true
           if-no-files-found: error
