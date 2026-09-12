@@ -17,6 +17,8 @@ jobs:
       - uses: xmake-io/github-action-setup-xmake@3a1a5dddfc7fa625d9a698738334bf55655a861a
         with:
           xmake-version: 3.1.1
+          actions-cache-folder: .ci-tools/xmake
+          project-path: .
           package-cache: true
           package-cache-key: macos15-arm64-${{ hashFiles('xmake.lua', 'vendor/xmake/**') }}
       - name: Build and test native AbilityFramework
