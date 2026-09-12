@@ -19,13 +19,25 @@ jobs:
           xmake-version: 3.1.1
           actions-cache-folder: .ci-tools/xmake
           project-path: .
-          package-cache: true
-          package-cache-key: macos15-arm64-${{ hashFiles('xmake.lua', 'vendor/xmake/**') }}
-      - name: Build and test native AbilityFramework
+      - name: Restore native dependency cache
+        id: dependencies
+        uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830
+        with:
+          path: build/.packages
+          key: macos15-arm64-xmake311-deps-${{ hashFiles('xmake.lua', 'vendor/xmake/**') }}
+      - name: Resolve native dependencies
         run: |
           test "$(uname -m)" = arm64
           xmake f -y -p macosx -a arm64 -m release --fwk-static=n --enable-test=y --use-cpptrace=n
-          xmake build -y -j 3 AbilityFramework
+      - name: Cache resolved dependencies before compiling application sources
+        if: steps.dependencies.outputs.cache-hit != 'true'
+        uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830
+        with:
+          path: build/.packages
+          key: ${{ steps.dependencies.outputs.cache-primary-key }}
+      - name: Build and test native AbilityFramework
+        run: |
+          xmake build -vD -y -j 3 AbilityFramework
           xmake build -y -j 3 test
           xmake run test
           build/macosx/arm64/release/AbilityFramework --version
