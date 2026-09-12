@@ -1,6 +1,7 @@
 // Copyright 2026 InsightOS
 // SPDX-License-Identifier: Apache-2.0
 #include "doctest.h"
+#include "resourcemgr/store_client.hpp"
 #include "util/discovery_utils.hpp"
 #include "discoverymgr/system_status.hpp"
 #include <net/if.h>
@@ -25,4 +26,14 @@ TEST_CASE("System load sampling works without procfs on macOS") {
     const auto info = SystemInfo::current();
     CHECK(info.load != SystemLoad::unknown);
     CHECK(info.trend != SystemLoadTrend::unknown);
+}
+
+TEST_CASE("Package host information uses native OS metadata") {
+    const auto host = HostInfo::read_from_system();
+    CHECK_FALSE(host.os.empty());
+    CHECK_FALSE(host.os_version.empty());
+    CHECK_FALSE(host.arch.empty());
+#ifdef __APPLE__
+    CHECK(host.os == "macos");
+#endif
 }
