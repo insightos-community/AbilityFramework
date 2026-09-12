@@ -2,7 +2,7 @@ name: Native macOS
 on:
   pull_request:
   push:
-    branches: [main, feat/macos-native]
+    branches: [main]
   workflow_dispatch:
 permissions:
   contents: read
@@ -28,8 +28,13 @@ jobs:
           xmake run test
           build/macosx/arm64/release/AbilityFramework --version
           otool -L build/macosx/arm64/release/AbilityFramework
+      - name: Archive executable and linkage report
+        run: |
+          mkdir -p .output
+          otool -L build/macosx/arm64/release/AbilityFramework > .output/linkage.txt
+          tar -czf .output/AbilityFramework-macos-arm64-development.tar.gz -C build/macosx/arm64/release AbilityFramework
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         with:
           name: AbilityFramework-macos-arm64-development
-          path: build/macosx/arm64/release/AbilityFramework
+          path: .output/*
           if-no-files-found: error
