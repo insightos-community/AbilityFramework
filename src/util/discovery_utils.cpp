@@ -34,10 +34,33 @@
 #include <stdexcept>
 #include <netdb.h>
 #include <netinet/in.h>
+#ifdef __APPLE__
+#include <SystemConfiguration/SystemConfiguration.h>
+#include <net/if_dl.h>
+#endif
 
 
 // 获取默认网卡的名称
 std::string get_default_interface() {
+#ifdef __APPLE__
+    // SystemConfiguration tracks the primary route without Linux procfs.
+    for (auto key : {CFSTR("State:/Network/Global/IPv4"), CFSTR("State:/Network/Global/IPv6")}) {
+        CFPropertyListRef value = SCDynamicStoreCopyValue(nullptr, key);
+        std::string result;
+        if (value && CFGetTypeID(value) == CFDictionaryGetTypeID()) {
+            auto name = static_cast<CFStringRef>(CFDictionaryGetValue(
+                static_cast<CFDictionaryRef>(value), CFSTR("PrimaryInterface")));
+            char buffer[IFNAMSIZ] = {};
+            if (name && CFGetTypeID(name) == CFStringGetTypeID() &&
+                CFStringGetCString(name, buffer, sizeof(buffer), kCFStringEncodingUTF8)) {
+                result = buffer;
+            }
+        }
+        if (value) { CFRelease(value); }
+        if (!result.empty()) { return result; }
+    }
+    return "";
+#else
     std::ifstream routeFile("/proc/net/route");
     std::string line;
     std::string interface;
@@ -59,6 +82,7 @@ std::string get_default_interface() {
     }
 
     return interface;
+#endif
 }
 
 // 获取所有网络接口的名称
@@ -87,7 +111,27 @@ std::vector<std::string> get_all_interfaces() {
 
 // 获取MAC地址
 std::string get_mac_address(const std::string& interface) {
-    struct ifreq ifr;
+#ifdef __APPLE__
+    struct ifaddrs* addresses = nullptr;
+    if (getifaddrs(&addresses) != 0) { return ""; }
+    std::string result;
+    for (auto entry = addresses; entry; entry = entry->ifa_next) {
+        if (!entry->ifa_addr || entry->ifa_addr->sa_family != AF_LINK || interface != entry->ifa_name) {
+            continue;
+        }
+        auto link = reinterpret_cast<const struct sockaddr_dl*>(entry->ifa_addr);
+        if (link->sdl_alen != 6) { continue; }
+        auto mac = reinterpret_cast<const unsigned char*>(LLADDR(link));
+        char formatted[18];
+        snprintf(formatted, sizeof(formatted), "%02x:%02x:%02x:%02x:%02x:%02x",
+                 mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
+        result = formatted;
+        break;
+    }
+    freeifaddrs(addresses);
+    return result;
+#else
+    struct ifreq ifr = {};
     int fd = socket(AF_INET, SOCK_DGRAM, 0);
 
     if (fd == -1) {
@@ -114,6 +158,7 @@ std::string get_mac_address(const std::string& interface) {
     );
 
     return std::string(macStr);
+#endif
 }
 
 // 获取IPv4地址

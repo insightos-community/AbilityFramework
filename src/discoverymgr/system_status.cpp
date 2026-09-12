@@ -14,7 +14,8 @@
 // limitations under the License.
 
 #include "discoverymgr/system_status.hpp"
-#include <fstream>
+#include <cstdlib>
+#include <algorithm>
 #include <glog/logging.h>
 #include <thread>
 namespace {
@@ -32,15 +33,10 @@ SystemLoad getSystemLoad(double load1, double load15, int cpuCores) {
 }
 } // namespace
 SystemInfo SystemInfo::current() {
-    std::ifstream file("/proc/loadavg");
-    if (!file) { LOG(ERROR) << "Cannot open /proc/loadavg\n"; }
-
-    double load1, load5, load15;
-    if (!(file >> load1 >> load5 >> load15)) { LOG(ERROR) << "Cannot read /proc/loadavg\n"; }
-
-    const int cpuCores = std::thread::hardware_concurrency();
-
-    SystemLoadTrend trend = getSystemLoadTrend(load1, load15, cpuCores);
-    SystemLoad load = getSystemLoad(load1, load5, load15);
+    double loads[3] = {};
+    if (getloadavg(loads, 3) != 3) { LOG(ERROR) << "Cannot read system load averages"; }
+    const int cpuCores = std::max(1u, std::thread::hardware_concurrency());
+    SystemLoadTrend trend = getSystemLoadTrend(loads[0], loads[1], loads[2]);
+    SystemLoad load = getSystemLoad(loads[0], loads[2], cpuCores);
     return SystemInfo{.load = load, .trend = trend};
 }
