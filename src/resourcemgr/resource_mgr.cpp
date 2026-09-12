@@ -28,6 +28,7 @@
 #include "util/parse_addr.hpp"
 #include "util/scope.hpp"
 #include "util/yaml_to_json.hpp"
+#include <cstdint>
 #include <ctime>
 #include <fstream>
 #include <glog/logging.h>
@@ -540,7 +541,7 @@ std::string ResourceManager::add_ability_cr(const AbilityCR& cr) {
     try {
         auto transaction = database_mgr::transaction();
         auto opt_id_str = db_exists_ability_cr_by_name(cr);
-        auto update_time = time(nullptr);
+        const std::int64_t update_time = static_cast<std::int64_t>(std::time(nullptr));
         auto id_str = to_string(cr.id);
         uuids::uuid res_id;
         if (opt_id_str) {
@@ -636,7 +637,7 @@ void ResourceManager::add_device_cr(const DeviceCR& cr) {
             db_write_device_cr_labels(id_str, k, v);
         }
 
-        auto update_time = time(nullptr);
+        const std::int64_t update_time = static_cast<std::int64_t>(std::time(nullptr));
         if (exists_device_cr(id_str)) {
             constexpr char SQL[] = R"sql(
     UPDATE DeviceCRBasic 

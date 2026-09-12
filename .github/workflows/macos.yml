@@ -1,0 +1,55 @@
+name: Native macOS
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: macos-15
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - uses: xmake-io/github-action-setup-xmake@3a1a5dddfc7fa625d9a698738334bf55655a861a
+        with:
+          xmake-version: 3.1.1
+          actions-cache-folder: .ci-tools/xmake
+          project-path: .
+      - name: Restore native dependency cache
+        id: dependencies
+        uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830
+        with:
+          path: build/.packages
+          key: macos15-arm64-xmake311-deps-${{ hashFiles('xmake.lua', 'vendor/xmake/**') }}
+      - name: Resolve native dependencies
+        run: |
+          test "$(uname -m)" = arm64
+          xmake f -y -p macosx -a arm64 -m release --fwk-static=n --enable-test=y --use-cpptrace=n
+      - name: Cache resolved dependencies before compiling application sources
+        if: steps.dependencies.outputs.cache-hit != 'true'
+        uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830
+        with:
+          path: build/.packages
+          key: ${{ steps.dependencies.outputs.cache-primary-key }}
+      - name: Build and test native AbilityFramework
+        run: |
+          xmake build -vD -y -j 3 AbilityFramework
+          xmake build -y -j 3 test
+          xmake run test
+          build/macosx/arm64/release/AbilityFramework --version
+          otool -L build/macosx/arm64/release/AbilityFramework
+      - name: Archive executable and linkage report
+        run: |
+          mkdir -p .output
+          otool -L build/macosx/arm64/release/AbilityFramework > .output/linkage.txt
+          tar -czf .output/AbilityFramework-macos-arm64-development.tar.gz -C build/macosx/arm64/release AbilityFramework
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: AbilityFramework-macos-arm64-development
+          path: .output/*
+          include-hidden-files: true
+          if-no-files-found: error

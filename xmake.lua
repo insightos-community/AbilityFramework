@@ -76,6 +76,9 @@ option_end()
 
 target("AbilityFrameworkAux")
     set_kind("static")
+    if is_plat("macosx") then
+        add_frameworks("SystemConfiguration", "CoreFoundation", {public = true})
+    end
     set_default(false)
     add_packages(
         "glog","nlohmann_json","yaml-cpp","openssl","cxxopts","sqlite3",

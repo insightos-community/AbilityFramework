@@ -18,6 +18,10 @@
 #include "util/ada_url.hpp"
 #include <glog/logging.h>
 #include <httplib.h>
+#ifdef __APPLE__
+#include <sys/sysctl.h>
+#include <sys/utsname.h>
+#endif
 
 namespace {
 /// @brief 目前的实现方式是要求版本完全匹配,尚未有wildcard机制
@@ -236,6 +240,16 @@ constexpr char DEFAULT_OS_RELEASE_PATH[] = "/etc/os-release";
 } // namespace
 
 HostInfo HostInfo::read_from_system() {
+#ifdef __APPLE__
+    struct utsname host = {};
+    char version[256] = {};
+    size_t length = sizeof(version);
+    if (uname(&host) != 0 ||
+        sysctlbyname("kern.osproductversion", version, &length, nullptr, 0) != 0) {
+        throw std::runtime_error(strjoin("Cannot read macOS host information: ", strerror(errno)));
+    }
+    return HostInfo{.os = "macos", .os_version = version, .arch = host.machine};
+#else
     std::unordered_map<std::string, std::string> os_release;
     try {
         os_release = read_os_release_from_file(DEFAULT_OS_RELEASE_PATH);
@@ -251,4 +265,5 @@ HostInfo HostInfo::read_from_system() {
         .os_version = os_release.at("VERSION_ID"),
         .arch = std::move(arch)
     };
+#endif
 }

@@ -30,7 +30,10 @@
  *  @ingroup libfund-ts
  */
 
-#include <bits/refwrap.h>
+#include <functional>
+#include <memory>
+#include <type_traits>
+#include <utility>
 #include <concepts>
 #include <exception> // uncaught_exceptions
 
@@ -243,7 +246,7 @@ class [[nodiscard]] unique_resource {
         Wrap(
             _Up&& __r, _Del2&& __d
         ) noexcept(is_nothrow_constructible_v<reference_wrapper<_Tp>, _Up>)
-            : _M_p(__builtin_addressof(static_cast<_Tp&>(__r))) {
+            : _M_p(std::addressof(static_cast<_Tp&>(__r))) {
             __d.release();
         }
 
@@ -299,7 +302,7 @@ public:
         requires is_nothrow_move_constructible_v<_Res1> && is_nothrow_move_constructible_v<Del>
         : _M_res(std::move(__rhs._M_res))
         , _M_del(std::move(__rhs._M_del))
-        , _M_exec_on_reset(std::__exchange(__rhs._M_exec_on_reset, false)) {}
+        , _M_exec_on_reset(std::exchange(__rhs._M_exec_on_reset, false)) {}
 
     unique_resource(unique_resource&& __rhs)
         requires is_nothrow_move_constructible_v<_Res1> && (!is_nothrow_move_constructible_v<Del>)
@@ -310,7 +313,7 @@ public:
                          __rhs.release();
                      }
                  }))
-        , _M_exec_on_reset(std::__exchange(__rhs._M_exec_on_reset, false)) {}
+        , _M_exec_on_reset(std::exchange(__rhs._M_exec_on_reset, false)) {}
 
     unique_resource(unique_resource&& __rhs)
         requires(!is_nothrow_move_constructible_v<_Res1>)
@@ -348,7 +351,7 @@ public:
                 _M_del = __rhs._M_del;
             }
         }
-        _M_exec_on_reset = std::__exchange(__rhs._M_exec_on_reset, false);
+        _M_exec_on_reset = std::exchange(__rhs._M_exec_on_reset, false);
         return *this;
     }
 
