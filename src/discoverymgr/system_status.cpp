@@ -34,7 +34,10 @@ SystemLoad getSystemLoad(double load1, double load15, int cpuCores) {
 } // namespace
 SystemInfo SystemInfo::current() {
     double loads[3] = {};
-    if (getloadavg(loads, 3) != 3) { LOG(ERROR) << "Cannot read system load averages"; }
+    if (getloadavg(loads, 3) != 3) {
+        LOG(ERROR) << "Cannot read system load averages";
+        return SystemInfo{.load = SystemLoad::unknown, .trend = SystemLoadTrend::unknown};
+    }
     const int cpuCores = std::max(1u, std::thread::hardware_concurrency());
     SystemLoadTrend trend = getSystemLoadTrend(loads[0], loads[1], loads[2]);
     SystemLoad load = getSystemLoad(loads[0], loads[2], cpuCores);
