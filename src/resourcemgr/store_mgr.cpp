@@ -160,7 +160,7 @@ std::filesystem::path find_package_base_dir(const std::filesystem::path& start) 
     using std::filesystem::recursive_directory_iterator;
     for (const auto& dir_entry : recursive_directory_iterator(start)) {
         if (!dir_entry.is_regular_file()) { continue; }
-        std::string filename = dir_entry.path().filename();
+        std::string filename = dir_entry.path().filename().string();
         if ((filename == "package.yaml")) { return dir_entry.path().parent_path(); }
     }
     return {};
