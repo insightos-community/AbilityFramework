@@ -28,7 +28,7 @@ inline int getifaddrs(ifaddrs** output) {
         entry->ifa_name=_strdup(addresses[i].name);
         auto length=addresses[i].address.address4.sin_family==AF_INET ? sizeof(sockaddr_in) : sizeof(sockaddr_in6);
         entry->ifa_addr=static_cast<sockaddr*>(std::malloc(length));
-        if(!entry->ifa_name || !entry->ifa_addr) { delete entry; freeifaddrs(*output); *output=nullptr; uv_free_interface_addresses(addresses,count); errno=ENOMEM; return -1; }
+        if(!entry->ifa_name || !entry->ifa_addr) { std::free(entry->ifa_name); std::free(entry->ifa_addr); delete entry; freeifaddrs(*output); *output=nullptr; uv_free_interface_addresses(addresses,count); errno=ENOMEM; return -1; }
         std::memcpy(entry->ifa_addr,&addresses[i].address,length);
         std::memcpy(entry->physical,addresses[i].phys_addr,6);
         entry->internal=addresses[i].is_internal!=0;

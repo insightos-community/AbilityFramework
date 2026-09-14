@@ -40,10 +40,10 @@ inline T make_error(Args&&... args) {
 }
 
 template <OstreamPrintable... Args>
-inline unexpected<ErrorMsg> make_unexpected(Args&&... args) {
+inline ::draft::unexpected<ErrorMsg> make_unexpected(Args&&... args) {
     std::ostringstream oss;
     ((oss << args), ...);
-    return unexpected(oss.str());
+    return ::draft::unexpected<ErrorMsg>{oss.str()};
 }
 
 namespace std {
