@@ -70,28 +70,28 @@ bool is_package(const Path& p) {
 
 namespace {
 expected<std::string, std::string> get_kind(const YAML::Node& crd) {
-    if (!crd["kind"]) { return unexpected("needs /kind"); }
-    if (!crd["kind"].IsScalar()) { return unexpected("needs /kind be scalar"); }
+    if (!crd["kind"]) { return ::semantic_expected::unexpected("needs /kind"); }
+    if (!crd["kind"].IsScalar()) { return ::semantic_expected::unexpected("needs /kind be scalar"); }
     return crd["kind"].as<std::string>();
 }
 
 expected<std::string, std::string> get_name(const YAML::Node& crd) {
-    if (!crd["metadata"]["name"]) { return unexpected("needs /metadata/name"); }
+    if (!crd["metadata"]["name"]) { return ::semantic_expected::unexpected("needs /metadata/name"); }
     if (!crd["metadata"]["name"].IsScalar()) {
-        return unexpected("needs /metadata/name be string");
+        return ::semantic_expected::unexpected("needs /metadata/name be string");
     }
     return crd["metadata"]["name"].as<std::string>();
 }
 
 expected<std::string, std::string> get_spec_package(const YAML::Node& cr) {
-    if (!cr["spec"]["package"]) { return unexpected("needs /spec/package"); }
-    if (!cr["spec"]["package"].IsScalar()) { return unexpected("needs /spec/package be scalar"); }
+    if (!cr["spec"]["package"]) { return ::semantic_expected::unexpected("needs /spec/package"); }
+    if (!cr["spec"]["package"].IsScalar()) { return ::semantic_expected::unexpected("needs /spec/package be scalar"); }
     return cr["spec"]["package"].as<std::string>();
 }
 
 expected<std::string, std::string> get_crd_packageName(const YAML::Node& crd) {
-    if (!crd["packageName"]) { return unexpected("needs /packageName"); }
-    if (!crd["packageName"].IsScalar()) { return unexpected("needs /packageName be string"); }
+    if (!crd["packageName"]) { return ::semantic_expected::unexpected("needs /packageName"); }
+    if (!crd["packageName"].IsScalar()) { return ::semantic_expected::unexpected("needs /packageName be string"); }
     return crd["packageName"].as<std::string>();
 }
 
@@ -100,7 +100,7 @@ bool is_ability(std::string_view kind) {
 }
 
 expected<semver::version, std::string> read_version(const YAML::Node& y) {
-    if (!y["version"] || (!y["version"].IsScalar())) { return unexpected{"need /version"}; }
+    if (!y["version"] || (!y["version"].IsScalar())) { return ::semantic_expected::unexpected{"need /version"}; }
     auto version_str = y["version"].as<std::string>();
     try {
         return semver::version{version_str};
@@ -112,7 +112,7 @@ expected<semver::version, std::string> read_version(const YAML::Node& y) {
 
 expected<semver::version, std::string> get_spec_version(const YAML::Node& cr) {
     if (!cr["spec"]["version"] || (!cr["spec"]["version"].IsScalar())) {
-        return unexpected{"need /spec/version"};
+        return ::semantic_expected::unexpected{"need /spec/version"};
     }
     auto version_str = cr["spec"]["version"].as<std::string>();
     try {
@@ -124,7 +124,7 @@ expected<semver::version, std::string> get_spec_version(const YAML::Node& cr) {
 }
 
 expected<std::string, std::string> read_name(const YAML::Node& y) {
-    if (!y["name"] || (!y["name"].IsScalar())) { return unexpected{"need /name"}; }
+    if (!y["name"] || (!y["name"].IsScalar())) { return ::semantic_expected::unexpected{"need /name"}; }
     auto name_str = y["name"].as<std::string>();
     return name_str;
 }
@@ -813,10 +813,10 @@ expected<void, std::string> ResourceManager::add_subabilities() {
     //         else {
     //             auto res
     //                 = send_post_request(it->position, "/api/resourcemgr/add_abilityCr", json_cr);
-    //             if (!res.has_value()) { return unexpected("post error"); }
+    //             if (!res.has_value()) { return ::semantic_expected::unexpected("post error"); }
     //             nlohmann::json json_res = nlohmann::json::parse(res.value());
     //             if (json_res["result"] == "success") { return {}; }
-    //             return unexpected("remote add subabilities error");
+    //             return ::semantic_expected::unexpected("remote add subabilities error");
     //         }
     //     }
     //     nlohmann::json cr_basic = extract_basic(ability);
@@ -1664,11 +1664,11 @@ expected<void, std::string> ResourceManager::read_cr_in_framework_cr_dir(
 ) {
     if (!std::filesystem::exists(path)) {
         LOG(ERROR) << path << "does not exists";
-        return unexpected{"path does not exists"};
+        return ::semantic_expected::unexpected{"path does not exists"};
     }
     if (!std::filesystem::is_directory(path)) {
         LOG(ERROR) << path << "is not a directory";
-        return unexpected{"path is not a directory"};
+        return ::semantic_expected::unexpected{"path is not a directory"};
     }
     read_crs_into_db(path);
     return {};
@@ -1678,7 +1678,7 @@ expected<void, std::string> ResourceManager::check_local_ability_cr_validity(con
 ) const {
     auto manifest = get_ability_manifest(cr.spec->abilityName, to_string(cr.spec->version));
     if (!manifest) {
-        return unexpected("manifest not found for " + cr.spec->abilityName + " " + to_string(cr.spec->version));
+        return ::semantic_expected::unexpected("manifest not found for " + cr.spec->abilityName + " " + to_string(cr.spec->version));
     }
     // 使用两级验证
     nlohmann::json cr_json = cr;
@@ -1694,10 +1694,10 @@ expected<void, std::string> check_remote_ability_cr_validity(const AbilityCR& cr
     auto res = send_post_request(
         cr.spec->position, "/api/resourcemgr/check_ability_cr_validity", payload
     );
-    if (!res.has_value()) { return unexpected("post error"); }
+    if (!res.has_value()) { return ::semantic_expected::unexpected("post error"); }
     nlohmann::json json_res = nlohmann::json::parse(res.value());
     if (json_res.value("result", "") == "success") { return {}; }
-    return unexpected("remote check cr validity error");
+    return ::semantic_expected::unexpected("remote check cr validity error");
 }
 } // namespace
 
@@ -1715,10 +1715,10 @@ expected<void, std::string> check_remote_device_cr_validity(const DeviceCR& cr) 
     nlohmann::json payload = cr;
     auto res
         = send_post_request(cr.spec.position, "/api/resourcemgr/check_device_cr_validity", payload);
-    if (!res.has_value()) { return unexpected("post error"); }
+    if (!res.has_value()) { return ::semantic_expected::unexpected("post error"); }
     nlohmann::json json_res = nlohmann::json::parse(res.value());
     if (json_res["result"] == "success") { return {}; }
-    return unexpected("remote check cr validity error");
+    return ::semantic_expected::unexpected("remote check cr validity error");
 }
 
 expected<std::filesystem::path, ErrorMsg> get_device_crd_path(const DeviceCR& cr) {
@@ -2039,10 +2039,10 @@ expected<void, std::string> send_http_occupy_request(
     payload["occupied_ability_id"] = occupied_ability_id;
     payload["OwnershipMode"] = mode;
     auto res = send_post_request(position, "/api/resourcemgr/occupy_ability", payload);
-    if (!res.has_value()) { return unexpected("post error"); }
+    if (!res.has_value()) { return ::semantic_expected::unexpected("post error"); }
     nlohmann::json json_res = nlohmann::json::parse(res.value());
     if (json_res["result"] == "success") { return {}; }
-    return unexpected("remote occupy ability error");
+    return ::semantic_expected::unexpected("remote occupy ability error");
 }
 } // namespace
 
@@ -2053,11 +2053,11 @@ expected<void, std::string> ResourceManager::occupy_ability(
     OwnershipMode mode
 ) {
     if (!judge_ability_exist(occupied_ability_id))
-        return unexpected{"can't occupy an ability that does not exist"};
+        return ::semantic_expected::unexpected{"can't occupy an ability that does not exist"};
     // resolve 同时查 AbilityInstance.spec_snapshot 和 AbilityCRBasic, 支持 instance_id
     auto cr_res = resolve_ability_cr_by_id(occupied_ability_id);
     if (!cr_res || !cr_res->spec) {
-        return unexpected{"ability cr spec not available for " + to_string(occupied_ability_id)};
+        return ::semantic_expected::unexpected{"ability cr spec not available for " + to_string(occupied_ability_id)};
     }
     auto& cr = *cr_res;
     if (!is_local_cr(cr.spec->position)) {
@@ -2070,16 +2070,16 @@ expected<void, std::string> ResourceManager::occupy_ability(
     if (it.has_value()) {
         if (it->id == occupy_ability_id) { return {}; }
         if (mode == OwnershipMode::shared) {
-            return unexpected{"can't add sharers to unique object"};
+            return ::semantic_expected::unexpected{"can't add sharers to unique object"};
         }
         else if (mode == OwnershipMode::unique) {
-            return unexpected{"can't add owner to unique object, it is already occupied"};
+            return ::semantic_expected::unexpected{"can't add owner to unique object, it is already occupied"};
         }
-        else { return unexpected{"invalid ownership mode" + std::to_string((int)mode)}; }
+        else { return ::semantic_expected::unexpected{"invalid ownership mode" + std::to_string((int)mode)}; }
     }
     auto sharers = get_ability_sharers(occupied_ability_id);
     if (!sharers.empty() && mode == OwnershipMode::unique) {
-        return unexpected{"can't add owner to shared object"};
+        return ::semantic_expected::unexpected{"can't add owner to shared object"};
     }
 
     if (mode == OwnershipMode::shared) {
@@ -2105,10 +2105,10 @@ expected<void, std::string> occupy_remote_device(
     payload["occupied_device_id"] = occupied_device_id;
     payload["OwnershipMode"] = mode;
     auto res = send_post_request(cr.spec.position, "/api/resourcemgr/occupy_device", payload);
-    if (!res.has_value()) { return unexpected("post error"); }
+    if (!res.has_value()) { return ::semantic_expected::unexpected("post error"); }
     nlohmann::json json_res = nlohmann::json::parse(res.value());
     if (json_res["result"] == "success") { return {}; }
-    return unexpected("remote occupy device error");
+    return ::semantic_expected::unexpected("remote occupy device error");
 }
 
 expected<void, std::string> ResourceManager::occupy_device(
@@ -2118,7 +2118,7 @@ expected<void, std::string> ResourceManager::occupy_device(
     OwnershipMode mode
 ) {
     if (!judge_device_exist(occupied_device_id)) {
-        return unexpected{"can't occupy a device that does not exist"};
+        return ::semantic_expected::unexpected{"can't occupy a device that does not exist"};
     }
     auto cr_res = get_device_cr(occupied_device_id);
     auto& cr = cr_res.value();
@@ -2129,16 +2129,16 @@ expected<void, std::string> ResourceManager::occupy_device(
     if (it.has_value()) {
         if (it->id == occupy_device_id) { return {}; }
         if (mode == OwnershipMode::shared) {
-            return unexpected{"can't add sharers to unique object"};
+            return ::semantic_expected::unexpected{"can't add sharers to unique object"};
         }
         else if (mode == OwnershipMode::unique) {
-            return unexpected{"can't add owner to unique object, it is already occupied"};
+            return ::semantic_expected::unexpected{"can't add owner to unique object, it is already occupied"};
         }
-        else { return unexpected{"invalid ownership mode" + std::to_string((int)mode)}; }
+        else { return ::semantic_expected::unexpected{"invalid ownership mode" + std::to_string((int)mode)}; }
     }
     auto sharers = get_ability_sharers(occupied_device_id);
     if (!sharers.empty() && mode == OwnershipMode::unique) {
-        return unexpected{"can't add owner to shared object"};
+        return ::semantic_expected::unexpected{"can't add owner to shared object"};
     }
 
     if (mode == OwnershipMode::shared) {
@@ -2206,7 +2206,7 @@ expected<msg_params::AbilityStorageInfo, std::string> ResourceManager::find_abil
     // 优先从 AbilityInstance.spec_snapshot 解析 (实例已经创建，CR 是模板拷贝)
     // 回退到模板表（兼容旧路径 / 子能力 id）
     auto it = resolve_ability_cr_by_id(instance_id);
-    if (!it) return unexpected{"no storage info for ability " + to_string(instance_id)};
+    if (!it) return ::semantic_expected::unexpected{"no storage info for ability " + to_string(instance_id)};
 
     const auto& abilityCR = *it;
     auto package_path = framework_home / "packages" / abilityCR.spec->package

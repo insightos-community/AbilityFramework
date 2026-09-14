@@ -245,20 +245,20 @@ expected<void, std::string> check_abstract_ability_cr_validity(
     auto manifest_path = pkg_path / "ability.manifest.yaml";
     if (!exists(manifest_path)) { return {}; }
     auto manifest_yaml = read_yaml_from_path(manifest_path);
-    if (!manifest_yaml) { LOG(ERROR) << "read manifest file error"; return unexpected{"read manifest error"}; }
+    if (!manifest_yaml) { LOG(ERROR) << "read manifest file error"; return ::semantic_expected::unexpected{"read manifest error"}; }
     auto manifest_json = yaml_to_json(*manifest_yaml);
     nlohmann::json interface_crd_schema;
     if (manifest_json.contains("schema") && manifest_json["schema"].contains("openAPIV3Schema")) {
         interface_crd_schema = expand_intentable(manifest_json["schema"]["openAPIV3Schema"]);
         if (interface_crd_schema.empty()) {
-            return unexpected{"can't find schema/openAPIV3Schema in manifest"};
+            return ::semantic_expected::unexpected{"can't find schema/openAPIV3Schema in manifest"};
         }
     }
     else { return {}; }
     for (int i = 0; i < cr.spec->subabilities.size(); ++i) {
         nlohmann::json sub_cr = *cr.spec->subabilities[i];
         auto res = validate_to_expected(sub_cr, interface_crd_schema);
-        if (!res) { return unexpected{"inavlid cr: " + res.error()}; }
+        if (!res) { return ::semantic_expected::unexpected{"inavlid cr: " + res.error()}; }
     }
     return {};
 }
@@ -270,7 +270,7 @@ expected<void, ErrorMsg> validate_with_expanded_crd(
     using namespace nlohmann;
     const json Empty;
     json crd_schema = crd_json.value("/spec/schema/openAPIV3Schema"_json_pointer, Empty);
-    if (crd_schema.empty()) { return unexpected{"can't find /spec/schema/openAPIV3Schema"}; }
+    if (crd_schema.empty()) { return ::semantic_expected::unexpected{"can't find /spec/schema/openAPIV3Schema"}; }
     // 对schema进行展开，之后标准校验
     json expanded_crd;
     // x-intentable展开
@@ -281,7 +281,7 @@ expected<void, ErrorMsg> validate_with_expanded_crd(
     json cr_json = cr;
     // 校验能力cr
     auto res = validate_to_expected(cr_json, expanded_crd);
-    if (!res) { return unexpected{"inavlid cr: " + res.error()}; }
+    if (!res) { return ::semantic_expected::unexpected{"inavlid cr: " + res.error()}; }
     // 如果是组合能力，继续校验其子能力
     if (cr.kind == "ComposeAbility") {
         for (int i = 0; i < cr.spec->subabilities.size(); ++i) {
@@ -291,10 +291,10 @@ expected<void, ErrorMsg> validate_with_expanded_crd(
                     "/spec/schema/openAPIV3Schema"_json_pointer, Empty
                 );
                 if (sub_crd_schema.empty()) {
-                    return unexpected{"can't find /spec/schema/openAPIV3Schema"};
+                    return ::semantic_expected::unexpected{"can't find /spec/schema/openAPIV3Schema"};
                 }
                 auto res = validate_to_expected(sub_cr, sub_crd_schema);
-                if (!res) { return unexpected{"inavlid cr: " + res.error()}; }
+                if (!res) { return ::semantic_expected::unexpected{"inavlid cr: " + res.error()}; }
             }
         }
     }
@@ -302,20 +302,20 @@ expected<void, ErrorMsg> validate_with_expanded_crd(
         json interface_crd
             = crd_json.value("/depends/subabilities/x-implement"_json_pointer, Empty);
         if (interface_crd.empty()) {
-            return unexpected{"can't find /depends/subabilities/x-implement"};
+            return ::semantic_expected::unexpected{"can't find /depends/subabilities/x-implement"};
         }
         if (!interface_crd.is_string()) {
-            return unexpected{"/depends/subabilities/x-implement must be string"};
+            return ::semantic_expected::unexpected{"/depends/subabilities/x-implement must be string"};
         }
         std::string interface_crd_str = interface_crd.get<std::string>();
         auto res = check_abstract_ability_cr_validity(cr, interface_crd_str);
-        if (!res) { return unexpected{"inavlid cr: " + res.error()}; }
+        if (!res) { return ::semantic_expected::unexpected{"inavlid cr: " + res.error()}; }
     }
     // 校验成功
     return {};
 }
 catch (std::exception& e) {
-    return unexpected{e.what()};
+    return ::semantic_expected::unexpected{e.what()};
 }
 
 // Phase 1: 框架级验证 - CR 整体结构符合内置 ability.crd schema
@@ -332,17 +332,17 @@ expected<void, ErrorMsg> validate_cr_tasks_field(
 
     // 1. spec.tasks 必须存在
     if (!cr_json.contains("spec") || !cr_json["spec"].is_object()) {
-        return unexpected{"missing required field: spec"};
+        return ::semantic_expected::unexpected{"missing required field: spec"};
     }
     const auto& spec = cr_json["spec"];
     if (!spec.contains("tasks")) {
-        return unexpected{
+        return ::semantic_expected::unexpected{
             "missing required field: spec.tasks (CR must declare which manifest tasks it uses)"
         };
     }
     const auto& tasks = spec["tasks"];
     if (!tasks.is_array() || tasks.empty()) {
-        return unexpected{"spec.tasks must be a non-empty array"};
+        return ::semantic_expected::unexpected{"spec.tasks must be a non-empty array"};
     }
 
     // 2. 收集 manifest 中的合法 taskName
@@ -355,7 +355,7 @@ expected<void, ErrorMsg> validate_cr_tasks_field(
         }
     }
     if (manifest_task_names.empty()) {
-        return unexpected{"manifest defines no tasks; cannot validate CR tasks"};
+        return ::semantic_expected::unexpected{"manifest defines no tasks; cannot validate CR tasks"};
     }
 
     // 3. 校验每个 task 项
@@ -377,7 +377,7 @@ expected<void, ErrorMsg> validate_cr_tasks_field(
                     + "' not found in manifest tasks";
         }
     }
-    if (!errors.empty()) { return unexpected{"task field validation failed:" + errors}; }
+    if (!errors.empty()) { return ::semantic_expected::unexpected{"task field validation failed:" + errors}; }
     return {};
 }
 
@@ -403,9 +403,9 @@ expected<void, ErrorMsg> validate_cr_manifest_level(
 
     json cr_json = cr;
     auto res = validate_to_expected(cr_json, expanded);
-    if (!res) { return unexpected{"manifest-level validation failed: " + res.error()}; }
+    if (!res) { return ::semantic_expected::unexpected{"manifest-level validation failed: " + res.error()}; }
     return {};
 }
 catch (std::exception& e) {
-    return unexpected{std::string("manifest-level validation error: ") + e.what()};
+    return ::semantic_expected::unexpected{std::string("manifest-level validation error: ") + e.what()};
 }

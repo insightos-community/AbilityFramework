@@ -20,6 +20,7 @@
 #if __cplusplus > 202002L
 // 标准库已经实现了expected,不用我们再实现了
 #include <expected>
+namespace semantic_expected = std;
 #else
 #include <type_traits>
 #include <utility>
@@ -413,6 +414,7 @@ template <typename T, typename E>
 constexpr bool is_expected_v<expected<T, E>> = true;
 
 } // namespace draft
+namespace semantic_expected = draft;
 
 using draft::expected;
 using draft::is_expected;

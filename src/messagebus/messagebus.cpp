@@ -41,13 +41,13 @@ expected<void, std::string> send(const Message& message) {
     const auto& destination = message.router.destination;
     if (destination.empty()) {
         LOG(ERROR) << "message destination is empty";
-        return unexpected{"need destination"};
+        return ::semantic_expected::unexpected{"need destination"};
     }
     std::shared_lock _lk(BusPrivateMtx);
     auto it = ModuleMap.find(destination);
     if (it == ModuleMap.end()) {
         LOG(ERROR) << "no such module: " << destination;
-        return unexpected{"no such module: " + destination};
+        return ::semantic_expected::unexpected{"no such module: " + destination};
     }
     try {
         auto& mod = it->second;
@@ -65,13 +65,13 @@ expected<Message, std::string> send_sync(Message message, Duration timeout) {
     const auto& destination = message.router.destination;
     if (destination.empty()) {
         LOG(ERROR) << "message destination is empty";
-        return unexpected{"need destination"};
+        return ::semantic_expected::unexpected{"need destination"};
     }
     std::shared_lock _lk(BusPrivateMtx);
     auto it = ModuleMap.find(destination);
     if (it == ModuleMap.end()) {
         LOG(ERROR) << "no such module: " << destination;
-        return unexpected{"no such module: " + destination};
+        return ::semantic_expected::unexpected{"no such module: " + destination};
     }
 
     using Result = expected<Message, std::string>;
@@ -88,16 +88,16 @@ expected<Message, std::string> send_sync(Message message, Duration timeout) {
         }
         catch (FormatError& e) {
             prom_inner.set_value(Result(
-                unexpected{nlohmann::json({{"reason", e.what()}, {"content", e.content}}).dump()}
+                ::semantic_expected::unexpected{nlohmann::json({{"reason", e.what()}, {"content", e.content}}).dump()}
             ));
         }
         catch (std::exception& e) {
-            prom_inner.set_value(Result(unexpected{e.what()}));
+            prom_inner.set_value(Result(::semantic_expected::unexpected{e.what()}));
         }
     });
     auto wait_state = fut.wait_for(timeout);
     if (wait_state == std::future_status::ready) { return fut.get(); }
-    else { return unexpected{"timeout"}; }
+    else { return ::semantic_expected::unexpected{"timeout"}; }
 }
 
 void add_module(std::shared_ptr<Module> m) {

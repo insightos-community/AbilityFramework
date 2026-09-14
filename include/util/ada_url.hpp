@@ -1917,24 +1917,24 @@ static constexpr in_place_t in_place{};
 #endif
 
 template <class E>
-class unexpected {
+class ::semantic_expected::unexpected {
  public:
   static_assert(!std::is_same<E, void>::value, "E must not be void");
 
-  unexpected() = delete;
-  constexpr explicit unexpected(const E &e) : m_val(e) {}
+  ::semantic_expected::unexpected() = delete;
+  constexpr explicit ::semantic_expected::unexpected(const E &e) : m_val(e) {}
 
-  constexpr explicit unexpected(E &&e) : m_val(std::move(e)) {}
+  constexpr explicit ::semantic_expected::unexpected(E &&e) : m_val(std::move(e)) {}
 
   template <class... Args, typename std::enable_if<std::is_constructible<
                                E, Args &&...>::value>::type * = nullptr>
-  constexpr explicit unexpected(Args &&...args)
+  constexpr explicit ::semantic_expected::unexpected(Args &&...args)
       : m_val(std::forward<Args>(args)...) {}
   template <
       class U, class... Args,
       typename std::enable_if<std::is_constructible<
           E, std::initializer_list<U> &, Args &&...>::value>::type * = nullptr>
-  constexpr explicit unexpected(std::initializer_list<U> l, Args &&...args)
+  constexpr explicit ::semantic_expected::unexpected(std::initializer_list<U> l, Args &&...args)
       : m_val(l, std::forward<Args>(args)...) {}
 
   constexpr const E &value() const & { return m_val; }
@@ -1948,37 +1948,37 @@ class unexpected {
 
 #ifdef __cpp_deduction_guides
 template <class E>
-unexpected(E) -> unexpected<E>;
+::semantic_expected::unexpected(E) -> ::semantic_expected::unexpected<E>;
 #endif
 
 template <class E>
-constexpr bool operator==(const unexpected<E> &lhs, const unexpected<E> &rhs) {
+constexpr bool operator==(const ::semantic_expected::unexpected<E> &lhs, const ::semantic_expected::unexpected<E> &rhs) {
   return lhs.value() == rhs.value();
 }
 template <class E>
-constexpr bool operator!=(const unexpected<E> &lhs, const unexpected<E> &rhs) {
+constexpr bool operator!=(const ::semantic_expected::unexpected<E> &lhs, const ::semantic_expected::unexpected<E> &rhs) {
   return lhs.value() != rhs.value();
 }
 template <class E>
-constexpr bool operator<(const unexpected<E> &lhs, const unexpected<E> &rhs) {
+constexpr bool operator<(const ::semantic_expected::unexpected<E> &lhs, const ::semantic_expected::unexpected<E> &rhs) {
   return lhs.value() < rhs.value();
 }
 template <class E>
-constexpr bool operator<=(const unexpected<E> &lhs, const unexpected<E> &rhs) {
+constexpr bool operator<=(const ::semantic_expected::unexpected<E> &lhs, const ::semantic_expected::unexpected<E> &rhs) {
   return lhs.value() <= rhs.value();
 }
 template <class E>
-constexpr bool operator>(const unexpected<E> &lhs, const unexpected<E> &rhs) {
+constexpr bool operator>(const ::semantic_expected::unexpected<E> &lhs, const ::semantic_expected::unexpected<E> &rhs) {
   return lhs.value() > rhs.value();
 }
 template <class E>
-constexpr bool operator>=(const unexpected<E> &lhs, const unexpected<E> &rhs) {
+constexpr bool operator>=(const ::semantic_expected::unexpected<E> &lhs, const ::semantic_expected::unexpected<E> &rhs) {
   return lhs.value() >= rhs.value();
 }
 
 template <class E>
-unexpected<typename std::decay<E>::type> make_unexpected(E &&e) {
-  return unexpected<typename std::decay<E>::type>(std::forward<E>(e));
+::semantic_expected::unexpected<typename std::decay<E>::type> make_unexpected(E &&e) {
+  return ::semantic_expected::unexpected<typename std::decay<E>::type>(std::forward<E>(e));
 }
 
 struct unexpect_t {
@@ -2194,7 +2194,7 @@ using expected_enable_forward_value = detail::enable_if_t<
     std::is_constructible<T, U &&>::value &&
     !std::is_same<detail::decay_t<U>, in_place_t>::value &&
     !std::is_same<expected<T, E>, detail::decay_t<U>>::value &&
-    !std::is_same<unexpected<E>, detail::decay_t<U>>::value>;
+    !std::is_same<::semantic_expected::unexpected<E>, detail::decay_t<U>>::value>;
 
 template <class T, class E, class U, class G, class UR, class GR>
 using expected_enable_from_other = detail::enable_if_t<
@@ -2274,12 +2274,12 @@ struct expected_storage_base {
     if (m_has_val) {
       m_val.~T();
     } else {
-      m_unexpect.~unexpected<E>();
+      m_unexpect.~::semantic_expected::unexpected<E>();
     }
   }
   union {
     T m_val;
-    unexpected<E> m_unexpect;
+    ::semantic_expected::unexpected<E> m_unexpect;
     char m_no_init;
   };
   bool m_has_val;
@@ -2321,7 +2321,7 @@ struct expected_storage_base<T, E, true, true> {
   ~expected_storage_base() = default;
   union {
     T m_val;
-    unexpected<E> m_unexpect;
+    ::semantic_expected::unexpected<E> m_unexpect;
     char m_no_init;
   };
   bool m_has_val;
@@ -2362,13 +2362,13 @@ struct expected_storage_base<T, E, true, false> {
 
   ~expected_storage_base() {
     if (!m_has_val) {
-      m_unexpect.~unexpected<E>();
+      m_unexpect.~::semantic_expected::unexpected<E>();
     }
   }
 
   union {
     T m_val;
-    unexpected<E> m_unexpect;
+    ::semantic_expected::unexpected<E> m_unexpect;
     char m_no_init;
   };
   bool m_has_val;
@@ -2413,7 +2413,7 @@ struct expected_storage_base<T, E, false, true> {
   }
   union {
     T m_val;
-    unexpected<E> m_unexpect;
+    ::semantic_expected::unexpected<E> m_unexpect;
     char m_no_init;
   };
   bool m_has_val;
@@ -2450,7 +2450,7 @@ struct expected_storage_base<void, E, false, true> {
   ~expected_storage_base() = default;
   struct dummy {};
   union {
-    unexpected<E> m_unexpect;
+    ::semantic_expected::unexpected<E> m_unexpect;
     dummy m_val;
   };
   bool m_has_val;
@@ -2480,12 +2480,12 @@ struct expected_storage_base<void, E, false, false> {
 
   ~expected_storage_base() {
     if (!m_has_val) {
-      m_unexpect.~unexpected<E>();
+      m_unexpect.~::semantic_expected::unexpected<E>();
     }
   }
 
   union {
-    unexpected<E> m_unexpect;
+    ::semantic_expected::unexpected<E> m_unexpect;
     char m_dummy;
   };
   bool m_has_val;
@@ -2512,7 +2512,7 @@ struct expected_operations_base : expected_storage_base<T, E> {
   template <class... Args>
   void construct_error(Args &&...args) noexcept {
     new (std::addressof(this->m_unexpect))
-        unexpected<E>(std::forward<Args>(args)...);
+        ::semantic_expected::unexpected<E>(std::forward<Args>(args)...);
     this->m_has_val = false;
   }
 
@@ -2529,7 +2529,7 @@ struct expected_operations_base : expected_storage_base<T, E> {
                 * = nullptr>
   void assign(const expected_operations_base &rhs) noexcept {
     if (!this->m_has_val && rhs.m_has_val) {
-      geterr().~unexpected<E>();
+      geterr().~::semantic_expected::unexpected<E>();
       construct(rhs.get());
     } else {
       assign_common(rhs);
@@ -2545,7 +2545,7 @@ struct expected_operations_base : expected_storage_base<T, E> {
   void assign(const expected_operations_base &rhs) noexcept {
     if (!this->m_has_val && rhs.m_has_val) {
       T tmp = rhs.get();
-      geterr().~unexpected<E>();
+      geterr().~::semantic_expected::unexpected<E>();
       construct(std::move(tmp));
     } else {
       assign_common(rhs);
@@ -2564,7 +2564,7 @@ struct expected_operations_base : expected_storage_base<T, E> {
   void assign(const expected_operations_base &rhs) {
     if (!this->m_has_val && rhs.m_has_val) {
       auto tmp = std::move(geterr());
-      geterr().~unexpected<E>();
+      geterr().~::semantic_expected::unexpected<E>();
 
 #ifdef TL_EXPECTED_EXCEPTIONS_ENABLED
       try {
@@ -2587,7 +2587,7 @@ struct expected_operations_base : expected_storage_base<T, E> {
                 * = nullptr>
   void assign(expected_operations_base &&rhs) noexcept {
     if (!this->m_has_val && rhs.m_has_val) {
-      geterr().~unexpected<E>();
+      geterr().~::semantic_expected::unexpected<E>();
       construct(std::move(rhs).get());
     } else {
       assign_common(std::move(rhs));
@@ -2600,7 +2600,7 @@ struct expected_operations_base : expected_storage_base<T, E> {
   void assign(expected_operations_base &&rhs) {
     if (!this->m_has_val && rhs.m_has_val) {
       auto tmp = std::move(geterr());
-      geterr().~unexpected<E>();
+      geterr().~::semantic_expected::unexpected<E>();
 #ifdef TL_EXPECTED_EXCEPTIONS_ENABLED
       try {
         construct(std::move(rhs).get());
@@ -2621,7 +2621,7 @@ struct expected_operations_base : expected_storage_base<T, E> {
   // If exceptions are disabled then we can just copy-construct
   void assign(const expected_operations_base &rhs) noexcept {
     if (!this->m_has_val && rhs.m_has_val) {
-      geterr().~unexpected<E>();
+      geterr().~::semantic_expected::unexpected<E>();
       construct(rhs.get());
     } else {
       assign_common(rhs);
@@ -2630,7 +2630,7 @@ struct expected_operations_base : expected_storage_base<T, E> {
 
   void assign(expected_operations_base &&rhs) noexcept {
     if (!this->m_has_val && rhs.m_has_val) {
-      geterr().~unexpected<E>();
+      geterr().~::semantic_expected::unexpected<E>();
       construct(std::move(rhs).get());
     } else {
       assign_common(std::move(rhs));
@@ -2665,15 +2665,15 @@ struct expected_operations_base : expected_storage_base<T, E> {
   constexpr const T &&get() const && { return std::move(this->m_val); }
 #endif
 
-  TL_EXPECTED_11_CONSTEXPR unexpected<E> &geterr() & {
+  TL_EXPECTED_11_CONSTEXPR ::semantic_expected::unexpected<E> &geterr() & {
     return this->m_unexpect;
   }
-  constexpr const unexpected<E> &geterr() const & { return this->m_unexpect; }
-  TL_EXPECTED_11_CONSTEXPR unexpected<E> &&geterr() && {
+  constexpr const ::semantic_expected::unexpected<E> &geterr() const & { return this->m_unexpect; }
+  TL_EXPECTED_11_CONSTEXPR ::semantic_expected::unexpected<E> &&geterr() && {
     return std::move(this->m_unexpect);
   }
 #ifndef TL_EXPECTED_NO_CONSTRR
-  constexpr const unexpected<E> &&geterr() const && {
+  constexpr const ::semantic_expected::unexpected<E> &&geterr() const && {
     return std::move(this->m_unexpect);
   }
 #endif
@@ -2702,7 +2702,7 @@ struct expected_operations_base<void, E> : expected_storage_base<void, E> {
   template <class... Args>
   void construct_error(Args &&...args) noexcept {
     new (std::addressof(this->m_unexpect))
-        unexpected<E>(std::forward<Args>(args)...);
+        ::semantic_expected::unexpected<E>(std::forward<Args>(args)...);
     this->m_has_val = false;
   }
 
@@ -2710,7 +2710,7 @@ struct expected_operations_base<void, E> : expected_storage_base<void, E> {
   void assign(Rhs &&rhs) noexcept {
     if (!this->m_has_val) {
       if (rhs.m_has_val) {
-        geterr().~unexpected<E>();
+        geterr().~::semantic_expected::unexpected<E>();
         construct();
       } else {
         geterr() = std::forward<Rhs>(rhs).geterr();
@@ -2724,15 +2724,15 @@ struct expected_operations_base<void, E> : expected_storage_base<void, E> {
 
   bool has_value() const { return this->m_has_val; }
 
-  TL_EXPECTED_11_CONSTEXPR unexpected<E> &geterr() & {
+  TL_EXPECTED_11_CONSTEXPR ::semantic_expected::unexpected<E> &geterr() & {
     return this->m_unexpect;
   }
-  constexpr const unexpected<E> &geterr() const & { return this->m_unexpect; }
-  TL_EXPECTED_11_CONSTEXPR unexpected<E> &&geterr() && {
+  constexpr const ::semantic_expected::unexpected<E> &geterr() const & { return this->m_unexpect; }
+  TL_EXPECTED_11_CONSTEXPR ::semantic_expected::unexpected<E> &&geterr() && {
     return std::move(this->m_unexpect);
   }
 #ifndef TL_EXPECTED_NO_CONSTRR
-  constexpr const unexpected<E> &&geterr() const && {
+  constexpr const ::semantic_expected::unexpected<E> &&geterr() const && {
     return std::move(this->m_unexpect);
   }
 #endif
@@ -3068,14 +3068,14 @@ class expected : private detail::expected_move_assign_base<T, E>,
   static_assert(!std::is_same<T, std::remove_cv<unexpect_t>::type>::value,
                 "T must not be unexpect_t");
   static_assert(
-      !std::is_same<T, typename std::remove_cv<unexpected<E>>::type>::value,
-      "T must not be unexpected<E>");
+      !std::is_same<T, typename std::remove_cv<::semantic_expected::unexpected<E>>::type>::value,
+      "T must not be ::semantic_expected::unexpected<E>");
   static_assert(!std::is_reference<E>::value, "E must not be a reference");
 
   T *valptr() { return std::addressof(this->m_val); }
   const T *valptr() const { return std::addressof(this->m_val); }
-  unexpected<E> *errptr() { return std::addressof(this->m_unexpect); }
-  const unexpected<E> *errptr() const {
+  ::semantic_expected::unexpected<E> *errptr() { return std::addressof(this->m_unexpect); }
+  const ::semantic_expected::unexpected<E> *errptr() const {
     return std::addressof(this->m_unexpect);
   }
 
@@ -3084,14 +3084,14 @@ class expected : private detail::expected_move_assign_base<T, E>,
   TL_EXPECTED_11_CONSTEXPR U &val() {
     return this->m_val;
   }
-  TL_EXPECTED_11_CONSTEXPR unexpected<E> &err() { return this->m_unexpect; }
+  TL_EXPECTED_11_CONSTEXPR ::semantic_expected::unexpected<E> &err() { return this->m_unexpect; }
 
   template <class U = T,
             detail::enable_if_t<!std::is_void<U>::value> * = nullptr>
   constexpr const U &val() const {
     return this->m_val;
   }
-  constexpr const unexpected<E> &err() const { return this->m_unexpect; }
+  constexpr const ::semantic_expected::unexpected<E> &err() const { return this->m_unexpect; }
 
   using impl_base = detail::expected_move_assign_base<T, E>;
   using ctor_base = detail::expected_default_ctor_base<T, E>;
@@ -3099,7 +3099,7 @@ class expected : private detail::expected_move_assign_base<T, E>,
  public:
   typedef T value_type;
   typedef E error_type;
-  typedef unexpected<E> unexpected_type;
+  typedef ::semantic_expected::unexpected<E> unexpected_type;
 
 #if defined(TL_EXPECTED_CXX14) && !defined(TL_EXPECTED_GCC49) && \
     !defined(TL_EXPECTED_GCC54) && !defined(TL_EXPECTED_GCC55)
@@ -3385,7 +3385,7 @@ class expected : private detail::expected_move_assign_base<T, E>,
                 nullptr,
             detail::enable_if_t<!std::is_convertible<const G &, E>::value> * =
                 nullptr>
-  explicit constexpr expected(const unexpected<G> &e)
+  explicit constexpr expected(const ::semantic_expected::unexpected<G> &e)
       : impl_base(unexpect, e.value()),
         ctor_base(detail::default_constructor_tag{}) {}
 
@@ -3394,7 +3394,7 @@ class expected : private detail::expected_move_assign_base<T, E>,
       detail::enable_if_t<std::is_constructible<E, const G &>::value> * =
           nullptr,
       detail::enable_if_t<std::is_convertible<const G &, E>::value> * = nullptr>
-  constexpr expected(unexpected<G> const &e)
+  constexpr expected(::semantic_expected::unexpected<G> const &e)
       : impl_base(unexpect, e.value()),
         ctor_base(detail::default_constructor_tag{}) {}
 
@@ -3402,7 +3402,7 @@ class expected : private detail::expected_move_assign_base<T, E>,
       class G = E,
       detail::enable_if_t<std::is_constructible<E, G &&>::value> * = nullptr,
       detail::enable_if_t<!std::is_convertible<G &&, E>::value> * = nullptr>
-  explicit constexpr expected(unexpected<G> &&e) noexcept(
+  explicit constexpr expected(::semantic_expected::unexpected<G> &&e) noexcept(
       std::is_nothrow_constructible<E, G &&>::value)
       : impl_base(unexpect, std::move(e.value())),
         ctor_base(detail::default_constructor_tag{}) {}
@@ -3411,7 +3411,7 @@ class expected : private detail::expected_move_assign_base<T, E>,
       class G = E,
       detail::enable_if_t<std::is_constructible<E, G &&>::value> * = nullptr,
       detail::enable_if_t<std::is_convertible<G &&, E>::value> * = nullptr>
-  constexpr expected(unexpected<G> &&e) noexcept(
+  constexpr expected(::semantic_expected::unexpected<G> &&e) noexcept(
       std::is_nothrow_constructible<E, G &&>::value)
       : impl_base(unexpect, std::move(e.value())),
         ctor_base(detail::default_constructor_tag{}) {}
@@ -3519,7 +3519,7 @@ class expected : private detail::expected_move_assign_base<T, E>,
     if (has_value()) {
       val() = std::forward<U>(v);
     } else {
-      err().~unexpected<E>();
+      err().~::semantic_expected::unexpected<E>();
       ::new (valptr()) T(std::forward<U>(v));
       this->m_has_val = true;
     }
@@ -3544,7 +3544,7 @@ class expected : private detail::expected_move_assign_base<T, E>,
       val() = std::forward<U>(v);
     } else {
       auto tmp = std::move(err());
-      err().~unexpected<E>();
+      err().~::semantic_expected::unexpected<E>();
 
 #ifdef TL_EXPECTED_EXCEPTIONS_ENABLED
       try {
@@ -3566,12 +3566,12 @@ class expected : private detail::expected_move_assign_base<T, E>,
   template <class G = E,
             detail::enable_if_t<std::is_nothrow_copy_constructible<G>::value &&
                                 std::is_assignable<G &, G>::value> * = nullptr>
-  expected &operator=(const unexpected<G> &rhs) {
+  expected &operator=(const ::semantic_expected::unexpected<G> &rhs) {
     if (!has_value()) {
       err() = rhs;
     } else {
       this->destroy_val();
-      ::new (errptr()) unexpected<E>(rhs);
+      ::new (errptr()) ::semantic_expected::unexpected<E>(rhs);
       this->m_has_val = false;
     }
 
@@ -3581,12 +3581,12 @@ class expected : private detail::expected_move_assign_base<T, E>,
   template <class G = E,
             detail::enable_if_t<std::is_nothrow_move_constructible<G>::value &&
                                 std::is_move_assignable<G>::value> * = nullptr>
-  expected &operator=(unexpected<G> &&rhs) noexcept {
+  expected &operator=(::semantic_expected::unexpected<G> &&rhs) noexcept {
     if (!has_value()) {
       err() = std::move(rhs);
     } else {
       this->destroy_val();
-      ::new (errptr()) unexpected<E>(std::move(rhs));
+      ::new (errptr()) ::semantic_expected::unexpected<E>(std::move(rhs));
       this->m_has_val = false;
     }
 
@@ -3599,7 +3599,7 @@ class expected : private detail::expected_move_assign_base<T, E>,
     if (has_value()) {
       val().~T();
     } else {
-      err().~unexpected<E>();
+      err().~::semantic_expected::unexpected<E>();
       this->m_has_val = true;
     }
     ::new (valptr()) T(std::forward<Args>(args)...);
@@ -3613,7 +3613,7 @@ class expected : private detail::expected_move_assign_base<T, E>,
       ::new (valptr()) T(std::forward<Args>(args)...);
     } else {
       auto tmp = std::move(err());
-      err().~unexpected<E>();
+      err().~::semantic_expected::unexpected<E>();
 
 #ifdef TL_EXPECTED_EXCEPTIONS_ENABLED
       try {
@@ -3638,7 +3638,7 @@ class expected : private detail::expected_move_assign_base<T, E>,
       T t(il, std::forward<Args>(args)...);
       val() = std::move(t);
     } else {
-      err().~unexpected<E>();
+      err().~::semantic_expected::unexpected<E>();
       ::new (valptr()) T(il, std::forward<Args>(args)...);
       this->m_has_val = true;
     }
@@ -3653,7 +3653,7 @@ class expected : private detail::expected_move_assign_base<T, E>,
       val() = std::move(t);
     } else {
       auto tmp = std::move(err());
-      err().~unexpected<E>();
+      err().~::semantic_expected::unexpected<E>();
 
 #ifdef TL_EXPECTED_EXCEPTIONS_ENABLED
       try {
@@ -4014,7 +4014,7 @@ auto expected_map_impl(Exp &&exp, F &&f) -> expected<void, err_t<Exp>> {
     return {};
   }
 
-  return unexpected<err_t<Exp>>(std::forward<Exp>(exp).error());
+  return ::semantic_expected::unexpected<err_t<Exp>>(std::forward<Exp>(exp).error());
 }
 
 template <class Exp, class F,
@@ -4041,7 +4041,7 @@ auto expected_map_impl(Exp &&exp, F &&f) -> expected<void, err_t<Exp>> {
     return {};
   }
 
-  return unexpected<err_t<Exp>>(std::forward<Exp>(exp).error());
+  return ::semantic_expected::unexpected<err_t<Exp>>(std::forward<Exp>(exp).error());
 }
 #endif
 
@@ -4255,19 +4255,19 @@ constexpr bool operator!=(const U &v, const expected<T, E> &x) {
 }
 
 template <class T, class E>
-constexpr bool operator==(const expected<T, E> &x, const unexpected<E> &e) {
+constexpr bool operator==(const expected<T, E> &x, const ::semantic_expected::unexpected<E> &e) {
   return x.has_value() ? false : x.error() == e.value();
 }
 template <class T, class E>
-constexpr bool operator==(const unexpected<E> &e, const expected<T, E> &x) {
+constexpr bool operator==(const ::semantic_expected::unexpected<E> &e, const expected<T, E> &x) {
   return x.has_value() ? false : x.error() == e.value();
 }
 template <class T, class E>
-constexpr bool operator!=(const expected<T, E> &x, const unexpected<E> &e) {
+constexpr bool operator!=(const expected<T, E> &x, const ::semantic_expected::unexpected<E> &e) {
   return x.has_value() ? true : x.error() != e.value();
 }
 template <class T, class E>
-constexpr bool operator!=(const unexpected<E> &e, const expected<T, E> &x) {
+constexpr bool operator!=(const ::semantic_expected::unexpected<E> &e, const expected<T, E> &x) {
   return x.has_value() ? true : x.error() != e.value();
 }
 

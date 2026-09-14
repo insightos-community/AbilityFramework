@@ -89,12 +89,12 @@ auto make_temp_path() {
 expected<void, ErrorMsg> unzip(std::span<const char> data, const std::filesystem::path& path) {
     if (!std::filesystem::exists(path)) {
         if (!std::filesystem::create_directories(path)) {
-            return unexpected("Failed to create target directory: " + path.string());
+            return ::semantic_expected::unexpected("Failed to create target directory: " + path.string());
         }
     }
     mz_zip_archive zip_archive = {};
     mz_bool status = mz_zip_reader_init_mem(&zip_archive, data.data(), data.size(), 0);
-    if (!status) { return unexpected("Failed to initialize ZIP archive"); }
+    if (!status) { return ::semantic_expected::unexpected("Failed to initialize ZIP archive"); }
     // 获取 ZIP 包中文件的数量
     int file_count = mz_zip_reader_get_num_files(&zip_archive);
     // 遍历 ZIP 包中的文件和目录
@@ -102,7 +102,7 @@ expected<void, ErrorMsg> unzip(std::span<const char> data, const std::filesystem
         mz_zip_archive_file_stat file_stat;
         if (!mz_zip_reader_file_stat(&zip_archive, i, &file_stat)) {
             mz_zip_reader_end(&zip_archive);
-            return unexpected{"Failed to get file information for index " + std::to_string(i)};
+            return ::semantic_expected::unexpected{"Failed to get file information for index " + std::to_string(i)};
         }
         // 计算目标路径
         std::filesystem::path target_path = path / file_stat.m_filename;
@@ -111,7 +111,7 @@ expected<void, ErrorMsg> unzip(std::span<const char> data, const std::filesystem
             if (!std::filesystem::exists(target_path)) {
                 if (!std::filesystem::create_directories(target_path)) {
                     mz_zip_reader_end(&zip_archive);
-                    return unexpected{"Failed to create directory: " + target_path.string()};
+                    return ::semantic_expected::unexpected{"Failed to create directory: " + target_path.string()};
                 }
             }
             continue;
@@ -122,7 +122,7 @@ expected<void, ErrorMsg> unzip(std::span<const char> data, const std::filesystem
 
         if (!mz_zip_reader_extract_to_mem(&zip_archive, i, file_data.data(), file_data.size(), 0)) {
             mz_zip_reader_end(&zip_archive);
-            return unexpected{"Failed to extract file: " + std::string(file_stat.m_filename)};
+            return ::semantic_expected::unexpected{"Failed to extract file: " + std::string(file_stat.m_filename)};
         }
         // 确保父目录存在
         std::filesystem::create_directories(target_path.parent_path());
@@ -130,7 +130,7 @@ expected<void, ErrorMsg> unzip(std::span<const char> data, const std::filesystem
         std::ofstream ofs(target_path, std::ios::binary);
         if (!ofs) {
             mz_zip_reader_end(&zip_archive);
-            return unexpected{"Failed to write to file: " + target_path.string()};
+            return ::semantic_expected::unexpected{"Failed to write to file: " + target_path.string()};
         }
         ofs.write(file_data.data(), file_data.size());
         ofs.close();
@@ -146,7 +146,7 @@ expected<void, ErrorMsg> unzip(std::span<const char> data, const std::filesystem
         }
         catch (const std::exception& e) {
             mz_zip_reader_end(&zip_archive);
-            return unexpected{
+            return ::semantic_expected::unexpected{
                 "Failed to set executable permissions for file: " + target_path.string()
             };
         }
@@ -399,7 +399,7 @@ expected<void, ErrorMsg> StoreManager::extract_package(
     if (!spec.is_complete()) { throw std::invalid_argument("spec is not complete"); }
     auto destinated_path = global_vars::packages_path() / spec.package / spec.version;
     if (exists(destinated_path)) {
-        return unexpected{"already exists path " + destinated_path.string()};
+        return ::semantic_expected::unexpected{"already exists path " + destinated_path.string()};
     }
     create_directories(destinated_path.parent_path());
     auto tmp_path = make_temp_path();
@@ -407,7 +407,7 @@ expected<void, ErrorMsg> StoreManager::extract_package(
     if (auto res = unzip(pkg_data, tmp_path); !res) { return res; };
     auto pkg_base_path = find_package_base_dir(tmp_path);
     if (pkg_base_path.empty()) {
-        return unexpected{"no \"package.yaml\" found at package content"};
+        return ::semantic_expected::unexpected{"no \"package.yaml\" found at package content"};
     }
 
     // 将包从临时目录复制到最终目录
@@ -466,7 +466,7 @@ auto StoreManager::add_package(
         // 检查一下, 是不是解压成了 tmp_path/xxxx/package.yaml,
         // 如果是,那么 tmp_path/xxxx 才应该是真正的包路径
         auto deep_path = find_package_yaml_in_deeper(tmp_path);
-        if (deep_path.empty()) { return unexpected{"need /package.yaml in package"}; }
+        if (deep_path.empty()) { return ::semantic_expected::unexpected{"need /package.yaml in package"}; }
         tmp_path = deep_path;
         package_yaml_path = tmp_path / "package.yaml";
     }
@@ -475,7 +475,7 @@ auto StoreManager::add_package(
 
     if (!spec) { return spec.error(); }
     if (spec->arch != host_info.arch) {
-        return unexpected(strjoin(
+        return ::semantic_expected::unexpected(strjoin(
             "unsupported architecture, host expected ", host_info.arch, ", but package has ",
             spec->arch
         ));
@@ -513,7 +513,7 @@ auto StoreManager::remove_package(const PackageSpec& spec) -> expected<RemovePac
     if (!package_already_exists) { return RemovePackageRes{.result = "not-exist"}; }
 
     if (auto abilities = abilities_using_this_package(spec); !abilities.empty()) {
-        return unexpected{"there is still abilities using it: " + intercalate(", ", abilities)};
+        return ::semantic_expected::unexpected{"there is still abilities using it: " + intercalate(", ", abilities)};
     }
     // ok, 删除目录
     remove_all(dest_path);

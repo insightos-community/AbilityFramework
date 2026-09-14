@@ -204,7 +204,7 @@ auto prefix_by(T&& v) {
 
 template <typename T>
 expected<T, std::string> parse_if_is_success(const message_bus::Message& m) {
-    if (!m.success()) { return unexpected{m.view()}; }
+    if (!m.success()) { return ::semantic_expected::unexpected{m.view()}; }
     return m.try_parse<T>();
 }
 
@@ -380,7 +380,7 @@ expected<uuids::uuid, std::string> submit_task_local(TaskPtr task) {
     msg.set_extra(task);
 
     if (auto res = send_sync(std::move(msg)); !res) {
-        return unexpected{"send message failed" + res.error()};
+        return ::semantic_expected::unexpected{"send message failed" + res.error()};
     }
     return task->id();
 }
@@ -430,7 +430,7 @@ expected<uuids::uuid, std::string> LifecycleManager::on_lifecycle_request(
 //          std::string> {
 //              using U_Value = std::remove_cvref_t<U>;
 //              const U_Value* extra_p = message.get_extra<U_Value>();
-//              if (!extra_p) { return unexpected{"invalid extra data"}; }
+//              if (!extra_p) { return ::semantic_expected::unexpected{"invalid extra data"}; }
 //              (the_module.*mptr)(*extra_p);
 //              return {};
 //          };

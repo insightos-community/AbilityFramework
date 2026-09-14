@@ -116,7 +116,7 @@ expected<void, ErrorMsg> TaskManager::add_task_factory(
     if (!factory) {
         auto msg = strjoin("adding empty factory for ", task_type);
         LOG(ERROR) << msg;
-        return unexpected{msg};
+        return ::semantic_expected::unexpected{msg};
     }
     task_factories[task_type] = std::move(factory);
     LOG(INFO) << "added task facotory for " << task_type;
@@ -271,7 +271,7 @@ expected<void, std::string> TaskManager::on_receive(const message_bus::Message& 
             // 提交任务到任务管理器
             // add(parallel_task);
         }
-        else { return unexpected{"Unknown task type"}; }
+        else { return ::semantic_expected::unexpected{"Unknown task type"}; }
         return {};
     }
 
@@ -295,7 +295,7 @@ expected<void, std::string> TaskManager::on_receive(const message_bus::Message& 
         std::shared_ptr<message_bus::AbstractExtra> shared_extra = std::move(message.extra);
         // 动态转换为 message_bus::Extra<TaskPtr>
         auto extra = std::dynamic_pointer_cast<message_bus::Extra<TaskPtr>>(shared_extra);
-        if (!extra) { return unexpected{"extra is not TaskPtr"}; }
+        if (!extra) { return ::semantic_expected::unexpected{"extra is not TaskPtr"}; }
         TaskPtr task = extra->content;
         // 提交任务到任务管理器
         add(task);
@@ -304,9 +304,9 @@ expected<void, std::string> TaskManager::on_receive(const message_bus::Message& 
     }
     else if (message.router.operation == "add_task_factory/raw") {
         auto* extra = message.get_extra<TaskFactory>();
-        if (!extra) { return unexpected{"extra is not TaskFactory"}; }
+        if (!extra) { return ::semantic_expected::unexpected{"extra is not TaskFactory"}; }
         nlohmann::json payload = nlohmann::json::parse(message.view());
-        if (!payload.contains("task_type")) { return unexpected{"need task_type in payload"}; }
+        if (!payload.contains("task_type")) { return ::semantic_expected::unexpected{"need task_type in payload"}; }
         std::string task_type = payload.at("task_type");
 
         auto res = add_task_factory(task_type, std::move(*extra));
@@ -318,7 +318,7 @@ expected<void, std::string> TaskManager::on_receive(const message_bus::Message& 
         return {};
     }
 
-    return unexpected{"Unknown operation"};
+    return ::semantic_expected::unexpected{"Unknown operation"};
 };
 
 // 测试发送message
