@@ -33,6 +33,11 @@ SystemLoad getSystemLoad(double load1, double load15, int cpuCores) {
 }
 } // namespace
 SystemInfo SystemInfo::current() {
+#ifdef _WIN32
+    // Windows has no POSIX 1/5/15-minute runnable-queue averages. Do not
+    // advertise a fabricated idle score to discovery/election consumers.
+    return SystemInfo{.load = SystemLoad::unknown, .trend = SystemLoadTrend::unknown};
+#else
     double loads[3] = {};
     if (getloadavg(loads, 3) != 3) {
         LOG(ERROR) << "Cannot read system load averages";
@@ -42,4 +47,5 @@ SystemInfo SystemInfo::current() {
     SystemLoadTrend trend = getSystemLoadTrend(loads[0], loads[1], loads[2]);
     SystemLoad load = getSystemLoad(loads[0], loads[2], cpuCores);
     return SystemInfo{.load = load, .trend = trend};
+#endif
 }
