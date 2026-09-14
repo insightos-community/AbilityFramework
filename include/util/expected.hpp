@@ -65,6 +65,8 @@ public:
     {}
     expected(const expected&) = default;
     expected(expected&&) = default;
+    expected& operator=(const expected&) = default;
+    expected& operator=(expected&&) = default;
     expected(T&& t)
         : inner(std::in_place_index<0>, std::move(t)) {}
     expected(const T& t)
@@ -90,15 +92,18 @@ public:
         : inner(std::in_place_index<0>, std::forward<Ts>(args)...) {}
     template <std::convertible_to<T> U>
     expected& operator=(U&& v) {
-        inner = std::forward<U>(v);
+        inner.template emplace<0>(std::forward<U>(v));
+        return *this;
     }
     template <std::convertible_to<E> G>
     expected& operator=(unexpected<G>&& v) {
-        inner = static_cast<E>(std::move(v.inner));
+        inner.template emplace<1>(static_cast<E>(std::move(v.inner)));
+        return *this;
     }
     template <std::convertible_to<E> G>
     expected& operator=(const unexpected<G>& v) {
-        inner = static_cast<E>(v.inner);
+        inner.template emplace<1>(static_cast<E>(v.inner));
+        return *this;
     }
 
 private:
@@ -277,6 +282,8 @@ public:
     expected() = default;
     expected(const expected&) = default;
     expected(expected&&) = default;
+    expected& operator=(const expected&) = default;
+    expected& operator=(expected&&) = default;
 
     template <typename G>
     expected(unexpected<G>&& u)
