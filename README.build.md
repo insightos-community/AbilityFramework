@@ -151,12 +151,17 @@ xmake build -y -j 3 AbilityFramework
 xmake build -y -j 3 test
 xmake run test
 ./build/windows/x64/release/AbilityFramework.exe --version
+./.github/scripts/windows-stage.ps1
+python .github/scripts/windows-smoke.py build/windows/x64/release/AbilityFramework.exe
 ```
 
 The recipe is [.github/workflows/windows.yml](.github/workflows/windows.yml),
 using `windows-2022` and the vendored dependency recipes. It uploads development
 binaries after native build/tests. The current recipe uses the MSVC runtime;
-installer packaging must verify and supply required redistributable DLLs.
+`.github/scripts/windows-stage.ps1` supplies application-local redistributable
+DLLs from the selected Visual Studio installation. The HTTP smoke clears the
+build PATH and checks loaded module paths, including the local CRT. The archive
+records runtime version/file hashes and the loaded-module validation report.
 Compilation and unit tests alone do not qualify full Robot lifecycle or graphics.
 
 Windows network discovery uses libuv interface enumeration and Windows route
