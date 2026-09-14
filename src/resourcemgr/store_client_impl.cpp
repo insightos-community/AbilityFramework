@@ -216,6 +216,7 @@ std::unordered_map<std::string, std::string> read_os_release_from_file(
     return parse_os_release(filedata);
 }
 
+#ifndef _WIN32
 std::string get_system_architecture() {
     const char command[] = "uname -m";
     FILE* pipe = popen(command, "r");
@@ -237,6 +238,7 @@ std::string get_system_architecture() {
     pclose(pipe);
     return trim(result);
 }
+#endif
 
 constexpr char DEFAULT_OS_RELEASE_PATH[] = "/etc/os-release";
 
