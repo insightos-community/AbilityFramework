@@ -61,3 +61,11 @@ Copyright 2026 InsightOS。自有代码采用 [Apache-2.0](LICENSE)；第三方�
 ## 三个平台的构建复现
 
 参见 [glibc、musl 与 macOS 构建说明](README.build.md)：包含已锁定的源码版本、实际脚本入口、工具要求、本地与 CI 指令、产物位置和平台验证范围。
+
+## Windows 原生构建进度
+
+Windows x64 的 MSVC/xmake 适配与原生 CI 位于
+[Windows 构建说明](README.build.md#windows-x64-native-development-build)。
+使用原生网卡/路由接口和 `bin/ability.exe` 入口；Windows 不支持 POSIX 负载均值，
+对应状态返回 `unknown`。当前构建产物属于开发验证阶段，完整 Robot 生命周期、
+随包 DLL 与 quick-start 安装包仍需联合验证。
