@@ -14,6 +14,7 @@
 // limitations under the License.
 
 #pragma once
+#include <string>
 #include <string_view>
 #include <vector>
 bool is_valid_ipv4(std::string_view ip);
