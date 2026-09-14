@@ -1448,7 +1448,11 @@ void log_cr_validation_failure(
     }
     auto t = std::time(nullptr);
     std::tm tm{};
+#ifdef _WIN32
+    localtime_s(&tm, &t);
+#else
     localtime_r(&t, &tm);
+#endif
     ofs << "[" << std::put_time(&tm, "%Y-%m-%d %H:%M:%S") << "] "
         << "file=" << cr_file.string() << " kind=" << cr_kind << " name=" << cr_name << "\n"
         << "  reason: " << reason << "\n\n";

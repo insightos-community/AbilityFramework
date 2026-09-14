@@ -34,6 +34,8 @@ jobs:
           xmake run test
           if ($LASTEXITCODE -ne 0) { throw 'Native tests failed' }
           ./build/windows/x64/release/AbilityFramework.exe --version
+      - name: Native HTTP and Unicode workspace smoke
+        run: python .github/scripts/windows-smoke.py build/windows/x64/release/AbilityFramework.exe
       - name: Package native binaries
         run: Compress-Archive -Path build/windows/x64/release/* -DestinationPath AbilityFramework-windows-amd64-development.zip
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a

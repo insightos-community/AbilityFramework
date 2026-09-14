@@ -140,6 +140,9 @@ target("AbilityFrameworkAux")
     end)
 
 target("AbilityFramework")
+    if is_plat("windows") then
+        add_files("src/windows/manifest.rc")
+    end
     set_kind("binary")
     add_deps("AbilityFrameworkAux")
     add_files("src/main.cpp")
