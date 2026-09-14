@@ -13,5 +13,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
+#define DOCTEST_CONFIG_IMPLEMENT
 #include "doctest.h"
+
+#include <filesystem>
+#include <string>
+#include <string_view>
+
+std::string semantic_test_executable;
+
+int main(int argc, char** argv) {
+    if (argc == 2 && std::string_view(argv[1]) == "--semantic-spawn-child") { return 7; }
+    semantic_test_executable = std::filesystem::absolute(argv[0]).string();
+    doctest::Context context(argc, argv);
+    return context.run();
+}
