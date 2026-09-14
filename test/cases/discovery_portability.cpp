@@ -7,7 +7,7 @@
 #ifdef _WIN32
 #include <winsock2.h>
 #include <windows.h>
-#include <netioapi.h>
+#include <iphlpapi.h>
 #else
 #include <net/if.h>
 #endif

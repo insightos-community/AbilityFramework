@@ -20,11 +20,18 @@ jobs:
           actions-cache-folder: .ci-tools/xmake
           project-path: .
       - uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830
+        id: dependencies
         with:
           path: build/.packages
           key: windows2022-xmake311-${{ hashFiles('xmake.lua', 'vendor/xmake/**') }}
       - name: Configure native MSVC dependencies
         run: xmake f -y -p windows -a x64 -m release --fwk-static=n --enable-test=y --use-cpptrace=n
+      - name: Preserve resolved dependencies for compile retries
+        if: steps.dependencies.outputs.cache-hit != 'true'
+        uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830
+        with:
+          path: build/.packages
+          key: ${{ steps.dependencies.outputs.cache-primary-key }}
       - name: Compile native framework
         run: xmake build -vD -y -j 3 AbilityFramework
       - name: Native unit tests
