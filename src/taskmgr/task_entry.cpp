@@ -39,8 +39,11 @@ void TaskManager::update() {
     std::lock_guard _lk(m);
     for (auto it = active_handles.begin(); it != active_handles.end();) {
         auto& handle = it->second;
-        auto task = handle->data<TaskBase>();
-        auto state = handle->data<TaskBase>()->state();
+        // add() stores TaskPtr (shared_ptr<TaskInterface>) in shared_ptr<void>.
+        // Recover that exact pointer type: virtual inheritance can place the
+        // TaskInterface subobject at a different address from TaskBase on MSVC.
+        auto task = handle->data<TaskInterface>();
+        auto state = task->state();
         switch (state) {
         case TaskState::unstarted:
         case TaskState::running:
@@ -72,7 +75,7 @@ void TaskManager::add(TaskPtr task) {
     auto handle = timer_handler->parent().resource<uvw::async_handle>();
     handle->data(task);
     handle->on<uvw::close_event>([](uvw::close_event& ev, uvw::async_handle& self) {
-        auto task = self.data<TaskBase>();
+        auto task = self.data<TaskInterface>();
         auto s = task->state();
         if (s == TaskState::finished) {
             LOG(WARNING) << "task name=" << task->name() << ", id=" << task->id() << " finished";
