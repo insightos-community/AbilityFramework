@@ -381,7 +381,7 @@ std::optional<std::string> StoreManager::read_skill(
     auto base_canon = std::filesystem::weakly_canonical(base);
     // path traversal guard: target 必须落在 base 内
     auto rel = std::filesystem::relative(target, base_canon);
-    if (rel.empty() || rel.native().compare(0, 2, "..") == 0) { return std::nullopt; }
+    if (rel.empty() || rel.has_root_path() || *rel.begin() == std::filesystem::path("..")) { return std::nullopt; }
     if (!std::filesystem::exists(target) || !std::filesystem::is_regular_file(target)) {
         return std::nullopt;
     }

@@ -88,7 +88,11 @@ struct ScopedTestEnv {
         cfg << "framework_name: test_fwk_" << unique << "\n";
         cfg.close();
 
+#ifdef _WIN32
+        ::_putenv_s("ABILITY_FRAMEWORK_HOME", home.string().c_str());
+#else
         ::setenv("ABILITY_FRAMEWORK_HOME", home.c_str(), 1);
+#endif
         // global_vars::init 是幂等更新, 多次调用是安全的
         global_vars::init();
 
@@ -385,4 +389,19 @@ spec:
     std::string contents((std::istreambuf_iterator<char>(log)), std::istreambuf_iterator<char>());
     CHECK(contents.find("broken.yaml") != std::string::npos);
     CHECK(contents.find("NonExistent") != std::string::npos);
+}
+
+TEST_CASE("Skill reads distinguish parent traversal from relative dot-prefixed names") {
+    ScopedTestEnv env;
+    const auto base = StoreManager::mirrored_pkg_skills_dir("dummy.pkg", "1.0.0");
+    fs::create_directories(base);
+    std::ofstream(base / "SKILL.md") << "valid";
+    std::ofstream(base / "..notes.md") << "notes";
+    std::ofstream(base.parent_path() / "outside.md") << "outside";
+    CHECK(StoreManager::read_skill("dummy.pkg", "1.0.0", "SKILL.md") == "valid");
+    CHECK(StoreManager::read_skill("dummy.pkg", "1.0.0", "..notes.md") == "notes");
+    CHECK_FALSE(StoreManager::read_skill("dummy.pkg", "1.0.0", "../outside.md").has_value());
+#ifdef _WIN32
+    CHECK_FALSE(StoreManager::read_skill("dummy.pkg", "1.0.0", "..\\outside.md").has_value());
+#endif
 }
