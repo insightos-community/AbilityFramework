@@ -19,10 +19,14 @@
 #include <iostream>
 #include <memory>
 #include <thread>
+#ifndef _WIN32
 #include <netdb.h>
+#endif
 #include <string.h>
-#include <ifaddrs.h>
+#include "ports/interfaces.hpp"
+#ifndef _WIN32
 #include <netinet/in.h>
+#endif
 
 
 namespace mdns_cpp {

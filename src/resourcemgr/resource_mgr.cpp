@@ -2214,7 +2214,11 @@ expected<msg_params::AbilityStorageInfo, std::string> ResourceManager::find_abil
 
     return msg_params::AbilityStorageInfo{
         .package_path = package_path,
+        #ifdef _WIN32
+        .executable_path = package_path / "bin" / "ability.exe",
+#else
         .executable_path = package_path / "bin" / "ability",
+#endif
         .controller_path = ""
     };
 }

@@ -16,9 +16,13 @@
 #include "util/parse_addr.hpp"
 #include <regex>
 #include <string_view>
-#include <ifaddrs.h>
+#include "ports/interfaces.hpp"
+#ifndef _WIN32
 #include <netinet/in.h>
+#endif
+#ifndef _WIN32
 #include <arpa/inet.h>
+#endif
 #include "util/global_vars.hpp"
 
 namespace {

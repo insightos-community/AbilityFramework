@@ -13,27 +13,43 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include "ports/interfaces.hpp"
 #include "util/discovery_utils.hpp"
+#ifdef _WIN32
+#include <iphlpapi.h>
+#endif
+#ifndef _WIN32
 #include <arpa/inet.h>
+#endif
 #include <cstring>
 #include <fstream>
 #include <glog/logging.h>
-#include <ifaddrs.h>
+#include "ports/interfaces.hpp"
 #include <iostream>
+#ifndef _WIN32
 #include <net/if.h>
+#endif
 #include <openssl/bio.h>
 #include <openssl/buffer.h>
 #include <openssl/evp.h>
 #include <openssl/sha.h>
 #include <sstream>
 #include <string>
+#ifndef _WIN32
 #include <sys/ioctl.h>
+#endif
+#ifndef _WIN32
 #include <unistd.h>
+#endif
 #include <errno.h>
 #include <stdio.h>
 #include <stdexcept>
+#ifndef _WIN32
 #include <netdb.h>
+#endif
+#ifndef _WIN32
 #include <netinet/in.h>
+#endif
 #ifdef __APPLE__
 #include <SystemConfiguration/SystemConfiguration.h>
 #include <net/if_dl.h>
@@ -42,7 +58,24 @@
 
 // 获取默认网卡的名称
 std::string get_default_interface() {
-#ifdef __APPLE__
+#ifdef _WIN32
+    // Resolve the host's preferred IPv4 route without sending network traffic.
+    DWORD index=0;
+    if(GetBestInterface(htonl(0x08080808),&index)!=NO_ERROR) return "";
+    ULONG length=0;
+    GetAdaptersAddresses(AF_INET,0,nullptr,nullptr,&length);
+    std::vector<unsigned char> buffer(length);
+    auto adapters=reinterpret_cast<IP_ADAPTER_ADDRESSES*>(buffer.data());
+    if(GetAdaptersAddresses(AF_INET,0,nullptr,adapters,&length)!=NO_ERROR) return "";
+    for(auto adapter=adapters;adapter;adapter=adapter->Next) {
+        if(adapter->IfIndex!=index) continue;
+        int size=WideCharToMultiByte(CP_UTF8,0,adapter->FriendlyName,-1,nullptr,0,nullptr,nullptr);
+        std::string name(size,'\0');
+        WideCharToMultiByte(CP_UTF8,0,adapter->FriendlyName,-1,name.data(),size,nullptr,nullptr);
+        if(!name.empty()) name.pop_back(); return name;
+    }
+    return "";
+#elif defined(__APPLE__)
     // SystemConfiguration tracks the primary route without Linux procfs.
     for (auto key : {CFSTR("State:/Network/Global/IPv4"), CFSTR("State:/Network/Global/IPv6")}) {
         CFPropertyListRef value = SCDynamicStoreCopyValue(nullptr, key);
@@ -111,7 +144,17 @@ std::vector<std::string> get_all_interfaces() {
 
 // 获取MAC地址
 std::string get_mac_address(const std::string& interface) {
-#ifdef __APPLE__
+#ifdef _WIN32
+    ifaddrs* entries=nullptr; if(getifaddrs(&entries)!=0) return "";
+    std::string result;
+    for(auto p=entries;p;p=p->ifa_next) {
+        if(interface!=p->ifa_name) continue;
+        char formatted[18];auto mac=p->physical;
+        snprintf(formatted,sizeof(formatted),"%02x:%02x:%02x:%02x:%02x:%02x",mac[0],mac[1],mac[2],mac[3],mac[4],mac[5]);
+        result=formatted;break;
+    }
+    freeifaddrs(entries);return result;
+#elif defined(__APPLE__)
     struct ifaddrs* addresses = nullptr;
     if (getifaddrs(&addresses) != 0) { return ""; }
     std::string result;

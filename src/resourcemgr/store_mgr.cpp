@@ -134,6 +134,7 @@ expected<void, ErrorMsg> unzip(std::span<const char> data, const std::filesystem
         }
         ofs.write(file_data.data(), file_data.size());
         ofs.close();
+#ifndef _WIN32
         // 设置可执行权限
         try {
             std::filesystem::permissions(
@@ -149,6 +150,7 @@ expected<void, ErrorMsg> unzip(std::span<const char> data, const std::filesystem
                 "Failed to set executable permissions for file: " + target_path.string()
             };
         }
+#endif
     }
     mz_zip_reader_end(&zip_archive);
     return {};

@@ -18,6 +18,9 @@
 #include "util/ada_url.hpp"
 #include <glog/logging.h>
 #include <httplib.h>
+#ifdef _WIN32
+#include <uv.h>
+#endif
 #ifdef __APPLE__
 #include <sys/sysctl.h>
 #include <sys/utsname.h>
@@ -240,7 +243,13 @@ constexpr char DEFAULT_OS_RELEASE_PATH[] = "/etc/os-release";
 } // namespace
 
 HostInfo HostInfo::read_from_system() {
-#ifdef __APPLE__
+#ifdef _WIN32
+    uv_utsname_t host{};
+    if(uv_os_uname(&host)!=0) throw std::runtime_error("Cannot read Windows host information");
+    std::string architecture=host.machine;
+    if(architecture=="AMD64"||architecture=="x64") architecture="x86_64";
+    return HostInfo{.os="windows",.os_version=host.release,.arch=architecture};
+#elif defined(__APPLE__)
     struct utsname host = {};
     char version[256] = {};
     size_t length = sizeof(version);
