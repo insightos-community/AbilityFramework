@@ -1,4 +1,5 @@
 #pragma once
+#include <climits>
 #include <version>
 
 // <experimental/scope> -*- C++ -*-
@@ -142,7 +143,7 @@ public:
         if (std::uncaught_exceptions() > M_uncaught_init) { exit_function(); }
     }
 
-    void release() noexcept { M_uncaught_init = __INT_MAX__; }
+    void release() noexcept { M_uncaught_init = INT_MAX; }
 
 private:
     [[no_unique_address]] Ef exit_function;
@@ -186,7 +187,7 @@ public:
         if (std::uncaught_exceptions() <= M_uncaught_init) { exit_function(); }
     }
 
-    void release() noexcept { M_uncaught_init = -__INT_MAX__; }
+    void release() noexcept { M_uncaught_init = -INT_MAX; }
 
 private:
     [[no_unique_address]] Ef exit_function;
