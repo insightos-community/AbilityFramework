@@ -34,7 +34,7 @@ struct ExpectedPromise {
         result.emplace(std::forward<U>(v));
     }
     template <std::convertible_to<E> E1>
-    void return_value(unexpected<E1> err) {
+    void return_value(::semantic_expected::unexpected<E1> err) {
         result.emplace(std::move(err));
     }
     void unhandled_exception() {}
@@ -102,7 +102,7 @@ RunExpected<T, E> ExpectedPromise<T, E>::get_return_object() {
 }
 
 template <typename T, typename E>
-expected<T, E> operator||(std::optional<T>&& opt, unexpected<E>&& e) {
+expected<T, E> operator||(std::optional<T>&& opt, ::semantic_expected::unexpected<E>&& e) {
     if (opt.has_value()) { return std::move(opt).value(); }
     return std::move(e);
 }

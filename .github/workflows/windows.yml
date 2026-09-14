@@ -1,0 +1,59 @@
+name: Native Windows
+on:
+  push:
+    branches: [main, feat/windows-native]
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: windows-2022
+    timeout-minutes: 70
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - uses: xmake-io/github-action-setup-xmake@3a1a5dddfc7fa625d9a698738334bf55655a861a
+        with:
+          xmake-version: 3.1.1
+          actions-cache-folder: .ci-tools/xmake
+          project-path: .
+      - uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830
+        id: dependencies
+        with:
+          path: build/.packages
+          key: windows2022-xmake311-${{ hashFiles('xmake.lua', 'vendor/xmake/**') }}
+      - name: Configure native MSVC dependencies
+        run: xmake f -y -p windows -a x64 -m release --fwk-static=n --enable-test=y --use-cpptrace=n
+      - name: Preserve resolved dependencies for compile retries
+        if: steps.dependencies.outputs.cache-hit != 'true'
+        uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830
+        with:
+          path: build/.packages
+          key: ${{ steps.dependencies.outputs.cache-primary-key }}
+      - name: Compile native framework
+        run: xmake build -vD -y -j 3 AbilityFramework
+      - name: Native unit tests
+        run: |
+          xmake build -y -j 3 test
+          if ($LASTEXITCODE -ne 0) { throw 'Test build failed' }
+          xmake run test
+          if ($LASTEXITCODE -ne 0) { throw 'Native tests failed' }
+          ./build/windows/x64/release/AbilityFramework.exe --version
+      - name: Stage application-local VC redistributable DLLs
+        run: ./.github/scripts/windows-stage.ps1
+      - name: Native HTTP and Unicode workspace smoke
+        run: python .github/scripts/windows-smoke.py build/windows/x64/release/AbilityFramework.exe
+      - name: Package native binaries
+        run: |
+          $files = Get-ChildItem build/windows/x64/release | Where-Object { $_.Name -eq 'AbilityFramework.exe' -or $_.Extension -eq '.dll' -or $_.Extension -eq '.json' }
+          Compress-Archive -Path $files.FullName -DestinationPath AbilityFramework-windows-amd64-development.zip
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        if: always()
+        with:
+          name: AbilityFramework-windows-amd64-development
+          path: |
+            AbilityFramework-windows-amd64-development.zip
+            build/.logs/**
+          if-no-files-found: warn

@@ -225,7 +225,7 @@ public:
     expected<AbilityCR, ErrorMsg> on_query_find_ability_instance(ID id) const {
         auto op = resolve_ability_cr_by_id(id);
         if (op) { return std::move(*op); }
-        return unexpected{"ability: " + to_string(id) + " not found"};
+        return ::semantic_expected::unexpected{"ability: " + to_string(id) + " not found"};
     }
     // LifecycleMgr 通知: 子进程退出，应销毁实例行
     expected<nlohmann::json, std::string> on_ability_instance_exited(uuids::uuid instance_id) {
@@ -265,7 +265,7 @@ public:
     std::optional<msg_params::AbilityClassInfo> find_ability_id(ID abilityInstance_id);
     expected<msg_params::AbilityClassInfo, ErrorMsg> on_query_find_ability_id(ID instance_id) {
         if (auto it = find_ability_id(instance_id); it) { return std::move(*it); }
-        return unexpected{"ability: " + to_string(instance_id) + " not found"};
+        return ::semantic_expected::unexpected{"ability: " + to_string(instance_id) + " not found"};
     }
     void show() const;
 
@@ -281,7 +281,7 @@ public:
     expected<uuids::uuid, ErrorMsg> on_query_find_parent(ID id) {
         auto op = find_cr_parent(*this, id);
         if (op) { return std::move(*op); }
-        return unexpected{"ability: " + to_string(id) + " not found"};
+        return ::semantic_expected::unexpected{"ability: " + to_string(id) + " not found"};
     }
 
     friend class ResourceMgrModule;

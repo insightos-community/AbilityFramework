@@ -26,8 +26,8 @@ namespace {
 
 inline generator<std::string_view> seperated(std::string_view sv, char sep) {
     if (sv.empty()) { co_return; }
-    const auto* from = sv.begin();
-    const auto* until = sv.begin();
+    auto from = sv.begin();
+    auto until = sv.begin();
     for (; until != sv.end(); ++until) {
         if (*until == sep) {
             if (*from != sep) { co_yield std::string_view(from, until); }

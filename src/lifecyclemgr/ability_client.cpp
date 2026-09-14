@@ -50,10 +50,10 @@ protected:
         httplib::Client cli(hostname, port);
         LOG(INFO) << "post " << strjoin(hostname, ":", port, "/api/lifecycle/", command);
         auto post_res = cli.Post(strjoin("/api/lifecycle/", command));
-        if (!post_res) { return unexpected{to_string(post_res.error())}; }
+        if (!post_res) { return ::semantic_expected::unexpected{to_string(post_res.error())}; }
         if (post_res->status != 200) {
             // 留个心眼.这里的body不见得是人类可读的格式
-            return unexpected{"client: " + post_res->body};
+            return ::semantic_expected::unexpected{"client: " + post_res->body};
         }
         return {};
     }

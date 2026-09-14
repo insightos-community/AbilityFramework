@@ -15,6 +15,11 @@
 
 add_rules("mode.debug","mode.release")
 add_languages("c++20")
+if is_plat("windows") then
+    add_defines("NOMINMAX", "WIN32_LEAN_AND_MEAN", "_WIN32_WINNT=0x0A00")
+    add_cxxflags("cl::/utf-8", "cl::/bigobj", "cl::/Zc:__cplusplus")
+    add_syslinks("ws2_32", "iphlpapi", "userenv", "psapi")
+end
 set_policy("package.install_locally", true)
 set_policy("package.requires_lock", true)
 
@@ -102,8 +107,8 @@ target("AbilityFrameworkAux")
             config[varname] = string.trim(out)
             cprintf("${blue}  -- %s is %s\n", varname, config[varname])
         end
-        set_var_from_cmd("@BUILD_DATE@", "date +%Y-%m-%d")
-        set_var_from_cmd("@GIT_COMMIT_HASH@", "git -C " .. projectdir .. " rev-parse --short HEAD")
+        config["@BUILD_DATE@"] = os.date("%Y-%m-%d")
+        config["@GIT_COMMIT_HASH@"] = string.trim(os.iorunv("git", {"-C", projectdir, "rev-parse", "--short", "HEAD"}))
 
         local input_path = path.join(projectdir, "include/util/version.hpp.in")
         local output_path = path.join(projectdir, "include/version.hpp")
@@ -130,11 +135,14 @@ target("AbilityFrameworkAux")
         local embed_script = path.join(projectdir, "webui/embed.py")
         if os.exists(embed_script) then
             cprint("${green}embed webui")
-            os.execv("python3", {embed_script})
+            os.execv(is_plat("windows") and "python" or "python3", {embed_script})
         end
     end)
 
 target("AbilityFramework")
+    if is_plat("windows") then
+        add_files("src/windows/manifest.rc")
+    end
     set_kind("binary")
     add_deps("AbilityFrameworkAux")
     add_files("src/main.cpp")
@@ -151,7 +159,7 @@ task("make-version")
             config[varname] = string.trim(out)
             cprintf("${blue}  -- %s is %s\n", varname, config[varname])
         end
-        set_var_from_cmd("@BUILD_DATE@","date +%Y-%m-%d")
+        config["@BUILD_DATE@"] = os.date("%Y-%m-%d")
         set_var_from_cmd("@GIT_COMMIT_HASH@","git rev-parse --short HEAD")
 
         local input_config = io.readfile("include/util/version.hpp.in")

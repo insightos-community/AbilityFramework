@@ -274,7 +274,7 @@ int main(int argc, const char* argv[]) {
 
     // 先创建日志目录，再初始化 glog，避免 "Logging before InitGoogleLogging" 输出到 stderr
     std::filesystem::create_directories(global_vars::home_path() / "log");
-    configure_glog(global_vars::log_path(), options.log_to_stdout);
+    configure_glog(global_vars::log_path().string(), options.log_to_stdout);
     init_workspace_paths(global_vars::home_path());
     database_mgr::init_database(global_vars::home_path() / "databases" / "ability_framework.db");
     // 读取环境变量,然后从该目录读取config

@@ -139,3 +139,33 @@ See the [complete installer and repository index](https://github.com/insightos-c
 platform locks and end-to-end validation. Local build commands do not publish a
 Release. Publishing requires repository write access and a new version tag;
 existing release tags/assets should not be replaced.
+
+## Windows x64 native development build
+
+Install Visual Studio 2022 C++ tools/Windows SDK and xmake 3.1.1, then run from
+this checkout in PowerShell:
+
+```powershell
+xmake f -y -p windows -a x64 -m release --fwk-static=n --enable-test=y --use-cpptrace=n
+xmake build -y -j 3 AbilityFramework
+xmake build -y -j 3 test
+xmake run test
+./build/windows/x64/release/AbilityFramework.exe --version
+./.github/scripts/windows-stage.ps1
+python .github/scripts/windows-smoke.py build/windows/x64/release/AbilityFramework.exe
+```
+
+The recipe is [.github/workflows/windows.yml](.github/workflows/windows.yml),
+using `windows-2022` and the vendored dependency recipes. It uploads development
+binaries after native build/tests. The current recipe uses the MSVC runtime;
+`.github/scripts/windows-stage.ps1` supplies application-local redistributable
+DLLs from the selected Visual Studio installation. The HTTP smoke clears the
+build PATH and checks loaded module paths, including the local CRT. The archive
+records runtime version/file hashes and the loaded-module validation report.
+Compilation and unit tests alone do not qualify full Robot lifecycle or graphics.
+
+Windows network discovery uses libuv interface enumeration and Windows route
+selection. POSIX load averages are unavailable and reported as `unknown`, never
+as a fabricated idle score. Windows Ability archives need a native
+`bin/ability.exe` launcher from ability-scaffold and a bundled Python path in
+`SEMANTIC_ABILITY_PYTHON`.

@@ -54,7 +54,7 @@ expected<uuids::uuid, std::string> submit_task(TaskPtr task,std::string_view who
     msg.set_extra(task);
 
     if (auto res = send_sync(std::move(msg)); !res) {
-        return unexpected{"send message failed" + res.error()};
+        return ::semantic_expected::unexpected{"send message failed" + res.error()};
     }
     return task->id();
 }

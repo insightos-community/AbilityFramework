@@ -189,20 +189,20 @@ struct Message {
     /// @return 对应结构体,如果消息本身为错误信息或解析时格式错误,则返回错误消息
     template <FromJson T>
     expected<T, std::string> try_parse() const {
-        if (!success()) { return unexpected{view()}; }
+        if (!success()) { return ::semantic_expected::unexpected{view()}; }
         try {
             return nlohmann::json::parse(content).get<T>();
         }
         catch (nlohmann::json::exception& e) {
             using namespace std::string_literals;
-            return unexpected{"invalid format: "s + e.what()};
+            return ::semantic_expected::unexpected{"invalid format: "s + e.what()};
         }
     }
 };
 
 /// 构建一个 unexpected, 用于报告不合法的消息头
-inline unexpected<std::string> err_invalid_operation(const Message& m) {
-    return unexpected{"invalid operation: " + std::string(m.operation())};
+inline ::semantic_expected::unexpected<std::string> err_invalid_operation(const Message& m) {
+    return ::semantic_expected::unexpected{"invalid operation: " + std::string(m.operation())};
 }
 
 // 模块的通用接口
@@ -213,7 +213,7 @@ struct Module {
     // 注意,消息总线不负责模块内部的线程安全,
     // 模块有责任用加锁或其他方式保证自己的数据一致性
     virtual expected<void, std::string> on_receive(const Message& m) {
-        return unexpected{"module " + module_name() + " doesn't implement an on_receive method"};
+        return ::semantic_expected::unexpected{"module " + module_name() + " doesn't implement an on_receive method"};
     };
     [[nodiscard]] virtual std::string module_name() const = 0;
     virtual void on_register() {};

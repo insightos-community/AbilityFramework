@@ -1059,7 +1059,7 @@ expected<bool, std::string> DiscoveryManager::join_team(
         }
     }
 
-    return unexpected{"Team Master not found"}; // 未找到匹配的队长信息，返回错误信息
+    return ::semantic_expected::unexpected{"Team Master not found"}; // 未找到匹配的队长信息，返回错误信息
 }
 
 // 创建队伍成员信息

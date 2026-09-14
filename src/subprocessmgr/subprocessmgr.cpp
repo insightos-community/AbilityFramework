@@ -72,6 +72,12 @@ public:
         return (char**)ptrs.data();
     }
 }; // class EnvParams
+#ifdef _WIN32
+int can_execute(const char* filename) {
+    std::error_code error;
+    return std::filesystem::is_regular_file(std::filesystem::u8path(filename), error);
+}
+#else
 std::vector<gid_t> get_user_groups() {
     std::vector<gid_t> res;
     res.resize(8);
@@ -120,6 +126,7 @@ int can_execute(const char* filename) {
     }
     return 0; // 无执行权限
 }
+#endif
 } // namespace
 using IOFlag = uvw::process_handle::stdio_flags;
 using Path = std::filesystem::path;
