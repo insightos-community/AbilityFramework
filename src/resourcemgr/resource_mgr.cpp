@@ -130,7 +130,7 @@ expected<std::string, std::string> read_name(const YAML::Node& y) {
 }
 
 bool name_is_semver(const Path& p) {
-    return is_semver(p.filename());
+    return is_semver(p.filename().string());
 }
 
 // 发送post请求，成功则返回res->body，j["result"] == "succcess"表示目标机器执行动作成功
@@ -2217,11 +2217,11 @@ expected<msg_params::AbilityStorageInfo, std::string> ResourceManager::find_abil
                       / to_string(abilityCR.spec->version);
 
     return msg_params::AbilityStorageInfo{
-        .package_path = package_path,
-        #ifdef _WIN32
-        .executable_path = package_path / "bin" / "ability.exe",
+        .package_path = package_path.string(),
+#ifdef _WIN32
+        .executable_path = (package_path / "bin" / "ability.exe").string(),
 #else
-        .executable_path = package_path / "bin" / "ability",
+        .executable_path = (package_path / "bin" / "ability").string(),
 #endif
         .controller_path = ""
     };
