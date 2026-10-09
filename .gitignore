@@ -11,3 +11,7 @@
 /ability-config
 /include/version.hpp
 xmake-requires.lock
+
+# Python bytecode caches (CI scripts and tooling)
+__pycache__/
+*.pyc
